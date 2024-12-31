@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { backend_url } from "./util";
 
 function ExpenseForm({ onAddExpense }) {
     const [item, setItem] = useState("");
@@ -11,7 +12,7 @@ function ExpenseForm({ onAddExpense }) {
             const newExpense = { item, price: parseFloat(price), paidBy };
 
             try {
-                const response = await fetch("http://localhost:5000/expenses", {
+                const response = await fetch(backend_url+"/expenses", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newExpense),

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { backend_url } from "./util";
 
 function ExpenseList({
   persons = ["mukesh", "aadarsh", "kushal", "niraj"],
@@ -9,7 +10,7 @@ function ExpenseList({
   useEffect(() => {
       const fetchExpenses = async () => {
           try {
-              const response = await fetch("http://localhost:5000/expenses");
+              const response = await fetch(backend_url+"/expenses");
               if(response.status == 200){
                 // console.log(response.body)
                 const data = await response.json();
