@@ -9,10 +9,11 @@ function ExpenseForm({ onAddExpense }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (item && price && paidBy) {
-            const newExpense = { item, price: parseFloat(price), paidBy };
+            const newExpense = {id: Date.now(), item, price: parseFloat(price), paidBy };
 
             try {
                 const response = await fetch(backend_url+"/expenses", {
+
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newExpense),
