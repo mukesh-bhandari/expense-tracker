@@ -229,7 +229,7 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
 
   return (
     <>
-      <div className="expense-list">
+    {expenses.length > 0 && <div className="expense-list">
         <h2>Expense List</h2>
         <ol>
           {expenses.map((expense, index) => (
@@ -264,10 +264,12 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
             </li>
           ))}
         </ol>
-      </div>
-      <div className="expense-form">
+      </div>}
+      
+      {expenses.length > 0 &&  <div className="expense-form">
         <button onClick={handleSaveButton}>save</button>
-      </div>
+      </div>}
+     
       {/* <div className="expense-form">
         <h2>Final Balances:</h2>
         <ul>
@@ -285,26 +287,30 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
           ))}
         </ul>
       </div> */}
-      <div className="expense-form">
-        <h2> seperate transaction</h2>
-        <ul>
-          {Object.entries(netTransactions).map(([key, amount]) => {
-            const [from, to] = key.split("->");
 
-            return (
-              <li key={key}>
-                {from} owes {to} {amount.toFixed(2)}
-                <button
-                  className="transactactionDone"
-                  onClick={() => handleTransactionComplete([from, to])}
-                >
-                  transaction complete
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+{expenses.length > 0 &&    <div className="expense-form">
+      
+      <h2> seperate transaction</h2>
+      <ul>
+        {Object.entries(netTransactions).map(([key, amount]) => {
+          const [from, to] = key.split("->");
+
+          return (
+            <li key={key}>
+              {from} owes {to} {amount.toFixed(2)}
+              <button
+                className="transactactionDone"
+                onClick={() => handleTransactionComplete([from, to])}
+              >
+                transaction complete
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>}
+     
+    
     </>
   );
 }
