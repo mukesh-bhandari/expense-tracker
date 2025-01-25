@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { backend_url } from "./util";
-
 function ExpenseForm({ onAddExpense }) {
     const [item, setItem] = useState("");
     const [price, setPrice] = useState("");
     const [paidBy, setPaidBy] = useState("");
+    const [isAdding, setIsAdding] = useState(false)
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if(isAdding) return;
+        setIsAdding(true);
+
         if (item && price && paidBy) {
             const newExpense = {id: Date.now(), item, price: parseFloat(price), paidBy };
 
@@ -20,12 +23,15 @@ function ExpenseForm({ onAddExpense }) {
                 });
 
                 const data = await response.json();
+                // console.log(data)
                 onAddExpense(data); 
                 setItem("");
                 setPrice("");
                 setPaidBy("");
             } catch (error) {
                 console.error("Error adding expense:", error);
+            }finally{
+                setIsAdding(false)
             }
         }
     };
@@ -61,7 +67,9 @@ function ExpenseForm({ onAddExpense }) {
                 <option value="kushal">kushal</option>
                 <option value="niraj">niraj</option>
             </select>
-            <button type="submit">Add Expense</button>
+            <button type="submit" disabled={isAdding} >
+            {isAdding ? "Adding..." : "Add Expense"}
+            </button>
         </form></>
       
     );

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { backend_url } from "./util";
 
-function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
-  const [expenses, setExpenses] = useState([]);
+function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"], newExpense }) {
+  const [expenses, setExpenses] = useState([])
   const [buttonStates, setButtonStates] = useState({});
   const [checkboxStates, setCheckboxStates] = useState({});
   useEffect(() => {
@@ -19,6 +19,7 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
       }
     };
     fetchExpenses();
+    // console.log(expenses)
   }, []);
 
   useEffect(() => {
@@ -26,9 +27,8 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
     const initialCheckboxStates = {};
     expenses.forEach((expense) => {
       persons.forEach((person) => {
-        const key = `${expense.item}-${person}`;
+        const key = `${expense.id_}-${person}`;
         initialButtonStates[key] = expense.buttonstates[person];
-        // initialCheckboxStates[key] = expense.checkboxstates[person];
         if (expense.paidBy === person) {
           initialCheckboxStates[key] = true;
         } else {
@@ -36,12 +36,22 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
         }
       });
     });
+    // console.log(newExpense)
     setButtonStates(initialButtonStates);
     setCheckboxStates(initialCheckboxStates);
   }, [expenses]);
 
+  // useEffect(() => {
+  //   // console.log(expenses)
+  //   // console.log(newExpense)
+  //   if (expenses) {
+  //     // console.log(newExpense)
+  //     setExpenses((prev) => [...prev, expenses]);
+  //   }
+  // }, [expenses]);
+
   function handleButtonClick(expense, person) {
-    const key = `${expense.item}-${person}`;
+    const key = `${expense.id_}-${person}`;
     setButtonStates((prev) => ({
       ...prev,
       [key]: !prev[key], // Toggle button state
@@ -49,22 +59,23 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
   }
 
   function handleCheckBoxClick(expense, person) {
-    const key = `${expense.item}-${person}`;
+    const key = `${expense.id_}-${person}`;
     setCheckboxStates((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
+    console.log(buttonStates)
+    console.log(checkboxStates)
   }
 
   const handleSaveButton = async () => {
-    console.log(checkboxStates);
 
     
     const payLoad = expenses.map((expense) => {
       const buttonStateForExpense = {};
       const checkboxStateforExpense = {}
       persons.forEach((person) => {
-        const key = `${expense.item}-${person}`;
+        const key = `${expense.id_}-${person}`;
         buttonStateForExpense[person] = buttonStates[key] || false; 
         checkboxStateforExpense[person] = checkboxStates[key] || false;
       });
@@ -109,7 +120,7 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
       const price = parseFloat(expense.price);
       // console.log(typeof(price))
       const greenPersons = persons.filter((person) => {
-        const key = `${expense.item}-${person}`;
+        const key = `${expense.id_}-${person}`;
         return !buttonStates[key];
       });
 
@@ -118,7 +129,7 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
         const sharePerPerson = price / greenPersons.length;
 
         greenPersons.forEach((person) => {
-          const key = `${expense.item}-${person}`;
+          const key = `${expense.id_}-${person}`;
           //  console.log(balances[person])
           balances[person] -= sharePerPerson;
           // console.log(balances[person])
@@ -139,7 +150,7 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
 
   function handleTransactionComplete(person) {
     expenses.forEach((expense) => {
-      const key = `${expense.item}-${person}`;
+      const key = `${expense.id_}-${person}`;
       setCheckboxStates((prev) => {
         const updatedStates = { ...prev };
         updatedStates[key] = !updatedStates[key];
@@ -156,13 +167,13 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
       const price = parseFloat(expense.price);
 
       const greenPersons = persons.filter((person) => {
-        const key = `${expense.item}-${person}`;
+        const key = `${expense.id_}-${person}`;
         return !buttonStates[key];
       });
       if (greenPersons.length > 0) {
         const sharePerPerson = price / greenPersons.length;
         greenPersons.forEach((person) => {
-          const key = `${expense.item}-${person}`;
+          const key = `${expense.id_}-${person}`;
           if (person !== expense.paidBy) {
             if (checkboxStates[key]) {
               transactions.push({
@@ -212,7 +223,7 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
   function handleTransactionComplete([from, to]) {
     expenses.forEach((expense) => {
       persons.forEach((person) => {
-        const key = `${expense.item}-${person}`;
+        const key = `${expense.id_}-${person}`;
         if (
           (person === from && expense.paidBy === to) ||
           (person === to && expense.paidBy === from)
@@ -239,7 +250,7 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
               {/* <br /> */}
               {/* <strong>Share per person: {calculateShare(expense)}</strong> */}
               {persons.map((person) => {
-                const key = `${expense.item}-${person}`;
+                const key = `${expense.id_}-${person}`;
                 return (
                   <button
                     key={person}

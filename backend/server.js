@@ -25,7 +25,7 @@ let expenses = [];
 
 app.get("/expenses", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM expenses");
+    const result = await pool.query("SELECT * FROM expenses ORDER BY id_ ASC");
     res.json(result.rows);
   } catch (error) {
     console.error(error.message);
