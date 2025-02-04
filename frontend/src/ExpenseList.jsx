@@ -1,8 +1,12 @@
+import React from "react";
 import { useEffect, useState } from "react";
 import { backend_url } from "./util";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 
-function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"], newExpense }) {
-  const [expenses, setExpenses] = useState([])
+function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
+  const [expenses, setExpenses] = useState([]);
   const [buttonStates, setButtonStates] = useState({});
   const [checkboxStates, setCheckboxStates] = useState({});
   useEffect(() => {
@@ -64,26 +68,38 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"], newEx
       ...prev,
       [key]: !prev[key],
     }));
-    console.log(buttonStates)
-    console.log(checkboxStates)
+    // console.log(buttonStates);
+    // console.log(checkboxStates);
   }
 
   const handleSaveButton = async () => {
-
-    
     const payLoad = expenses.map((expense) => {
       const buttonStateForExpense = {};
-      const checkboxStateforExpense = {}
+      const checkboxStateforExpense = {};
+      const transactionCompletePerPerson = {};
       persons.forEach((person) => {
         const key = `${expense.id_}-${person}`;
-        buttonStateForExpense[person] = buttonStates[key] || false; 
+        buttonStateForExpense[person] = buttonStates[key] || false;
         checkboxStateforExpense[person] = checkboxStates[key] || false;
+        // console.log(buttonStateForExpense)
+
+        if (buttonStates[key] == true || checkboxStates[key] == true) {
+          transactionCompletePerPerson[person] = true;
+        } else {
+          transactionCompletePerPerson[person] = false;
+        }
       });
 
+      const transactionCompletePerExpense = Object.values(
+        transactionCompletePerPerson
+      ).every((value) => value === true);
+      console.log(transactionCompletePerExpense);
+
       return {
-        id: expense.id_, 
-        buttonStates: buttonStateForExpense, 
+        id: expense.id_,
+        buttonStates: buttonStateForExpense,
         checkboxStates: checkboxStateforExpense,
+        transaction_complete: transactionCompletePerExpense,
       };
     });
 
@@ -101,6 +117,26 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"], newEx
     }
   };
 
+  const handleDeleteBtn = async (id) => {
+    try {
+      const response = await fetch(`${backend_url}/expenses/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setExpenses((prevExpenses) =>
+          prevExpenses.filter((expense) => expense.id_ !== id)
+        );
+      }
+    } catch (error) {
+      console.log("error on deletion");
+    }
+  };
+
+  const navigate = useNavigate();
+  const handleNavigation = () => {
+    navigate("/expenses");
+  };
   // function calculateShare(expense) {
   //   const greenPersons = persons.filter((person) => {
   //     const key = `${expense.item}-${person}`;
@@ -240,47 +276,58 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"], newEx
 
   return (
     <>
-    {expenses.length > 0 && <div className="expense-list">
-        <h2>Expense List</h2>
-        <ol>
-          {expenses.map((expense, index) => (
-            <li key={index}>
-              {expense.item} - {parseFloat(expense.price)} paid by{" "}
-              {expense.paidBy}
-              {/* <br /> */}
-              {/* <strong>Share per person: {calculateShare(expense)}</strong> */}
-              {persons.map((person) => {
-                const key = `${expense.id_}-${person}`;
-                return (
-                  <button
-                    key={person}
-                    className="btn-toPay"
-                    style={{
-                      backgroundColor: buttonStates[key] ? "red" : "green",
-                    }}
-                    onClick={() => handleButtonClick(expense, person)}
-                  >
-                    {person}
-                    <span onClick={(e) => e.stopPropagation()}>
-                      <input
-                        className="checkbox"
-                        type="checkbox"
-                        checked={checkboxStates[key] || false}
-                        onChange={(e) => handleCheckBoxClick(expense, person)}
-                      />
-                    </span>
-                  </button>
-                );
-              })}
-            </li>
-          ))}
-        </ol>
-      </div>}
-      
-      {expenses.length > 0 &&  <div className="expense-form">
-        <button onClick={handleSaveButton}>save</button>
-      </div>}
-     
+      {expenses.length > 0 && (
+        <div className="expense-list">
+          <h2>Expense List</h2>
+          <ol>
+            {expenses.map((expense, index) => (
+              <li key={index}>
+                {expense.item} - {parseFloat(expense.price)} paid by{" "}
+                {expense.paidBy}
+                {/* <br /> */}
+                {/* <strong>Share per person: {calculateShare(expense)}</strong> */}
+                {persons.map((person) => {
+                  const key = `${expense.id_}-${person}`;
+                  return (
+                    <button
+                      key={person}
+                      className="btn-toPay"
+                      style={{
+                        backgroundColor: buttonStates[key] ? "red" : "green",
+                      }}
+                      onClick={() => handleButtonClick(expense, person)}
+                    >
+                      {person}
+                      <span onClick={(e) => e.stopPropagation()}>
+                        <input
+                          className="checkbox"
+                          type="checkbox"
+                          checked={checkboxStates[key] || false}
+                          onChange={(e) => handleCheckBoxClick(expense, person)}
+                        />
+                      </span>
+                    </button>
+                  );
+                })}
+                {/* delete button */}
+                <button
+                  className="delete-btn"
+                  onClick={(e) => handleDeleteBtn(expense.id_)}
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {expenses.length > 0 && (
+        <div className="expense-form">
+          <button onClick={handleSaveButton}>save</button>
+        </div>
+      )}
+
       {/* <div className="expense-form">
         <h2>Final Balances:</h2>
         <ul>
@@ -299,29 +346,32 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"], newEx
         </ul>
       </div> */}
 
-{expenses.length > 0 &&    <div className="expense-form">
-      
-      <h2> seperate transaction</h2>
-      <ul>
-        {Object.entries(netTransactions).map(([key, amount]) => {
-          const [from, to] = key.split("->");
+      {expenses.length > 0 && (
+        <div className="expense-form">
+          <h2> seperate transaction</h2>
+          <ul>
+            {Object.entries(netTransactions).map(([key, amount]) => {
+              const [from, to] = key.split("->");
 
-          return (
-            <li key={key}>
-              {from} owes {to} {amount.toFixed(2)}
-              <button
-                className="transactactionDone"
-                onClick={() => handleTransactionComplete([from, to])}
-              >
-                transaction complete
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>}
-     
-    
+              return (
+                <li key={key}>
+                  {from} owes {to} {amount.toFixed(2)}
+                  <button
+                    className="transactactionDone"
+                    onClick={() => handleTransactionComplete([from, to])}
+                  >
+                    transaction complete
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      <div className="expense-form">
+        <button onClick={handleNavigation}>show expense list</button>
+      </div>
     </>
   );
 }

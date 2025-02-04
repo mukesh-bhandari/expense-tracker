@@ -37,7 +37,7 @@ function ExpenseForm({ onAddExpense }) {
     };
     return (
      <>
-  
+  <h1>Expense Tracker</h1>
        <form 
        className="input-form"
        onSubmit={handleSubmit}>

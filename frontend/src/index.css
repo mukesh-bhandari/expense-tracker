@@ -82,3 +82,8 @@ align-items: center;
 .expense-form{
 padding: 1.5em;
 }
+
+.delete-btn{
+    background-color: red;
+  
+}
