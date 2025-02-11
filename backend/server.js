@@ -21,7 +21,7 @@ pool.on("error", (err) => {
   process.exit(-1); // Exit the process or take appropriate action
 });
 
-let expenses = [];
+const persons = ["mukesh", "aadarsh", "kushal", "niraj"];
 
 app.get("/expenses", async (req, res) => {
   try {
@@ -37,9 +37,7 @@ app.get("/expenses", async (req, res) => {
 
 app.get("/expenses/expenseList", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM expenses ORDER BY id_ ASC"
-    );
+    const result = await pool.query("SELECT * FROM expenses ORDER BY id_ ASC");
     res.json(result.rows);
   } catch (error) {
     console.error(error.message);
@@ -51,10 +49,18 @@ app.post("/expenses", async (req, res) => {
   // console.log(req.body)
   const newExpense = { ...req.body };
   const { id, item, price, paidBy } = newExpense;
+  const buttonstates = {};
+  const checkboxstates = {};
+
+  persons.forEach((person) => {
+    buttonstates[person] = false;
+    checkboxstates[person] = person === paidBy;
+  });
+
   try {
     const result = await pool.query(
-      `INSERT INTO EXPENSES (id_, item, price, "paidBy") VALUES ($1, $2, $3, $4) RETURNING *`,
-      [id, item, price, paidBy]
+      `INSERT INTO EXPENSES (id_, item, price, "paidBy", buttonstates, checkboxstates) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [id, item, price, paidBy, buttonstates, checkboxstates]
     );
     res.status(200).json(result.rows[0]);
   } catch (error) {
@@ -68,7 +74,8 @@ app.post("/expenses/save-states", async (req, res) => {
 
   try {
     for (const expense of expenses) {
-      const { id, buttonStates, checkboxStates, transaction_complete } = expense;
+      const { id, buttonStates, checkboxStates, transaction_complete } =
+        expense;
 
       await pool.query(
         "UPDATE expenses SET buttonstates = $1, checkboxstates = $2, transaction_complete = $3 WHERE id_ = $4",

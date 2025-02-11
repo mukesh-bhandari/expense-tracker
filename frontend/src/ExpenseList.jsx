@@ -5,85 +5,68 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
-function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
+function ExpenseList({
+  persons = ["mukesh", "aadarsh", "kushal", "niraj"],
+  newExpense,
+  onDelete,
+}) {
   const [expenses, setExpenses] = useState([]);
-  const [buttonStates, setButtonStates] = useState({});
-  const [checkboxStates, setCheckboxStates] = useState({});
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        const response = await fetch(backend_url + "/expenses");
-        if (response.status == 200) {
-          const data = await response.json();
-          // console.log(data)
-          setExpenses(data);
-        }
-      } catch (error) {
-        console.error("Error fetching expenses:", error);
-      }
-    };
-    fetchExpenses();
-    // console.log(expenses)
-  }, []);
 
   useEffect(() => {
-    const initialButtonStates = {};
-    const initialCheckboxStates = {};
-    expenses.forEach((expense) => {
-      persons.forEach((person) => {
-        const key = `${expense.id_}-${person}`;
-        initialButtonStates[key] = expense.buttonstates[person];
-        if (expense.paidBy === person) {
-          initialCheckboxStates[key] = true;
-        } else {
-          initialCheckboxStates[key] = expense.checkboxstates[person];
-        }
-      });
-    });
-    // console.log(newExpense)
-    setButtonStates(initialButtonStates);
-    setCheckboxStates(initialCheckboxStates);
-  }, [expenses]);
+    setExpenses(newExpense);
+  }, [newExpense]);
 
-  // useEffect(() => {
-  //   // console.log(expenses)
-  //   // console.log(newExpense)
-  //   if (expenses) {
-  //     // console.log(newExpense)
-  //     setExpenses((prev) => [...prev, expenses]);
-  //   }
-  // }, [expenses]);
-
-  function handleButtonClick(expense, person) {
-    const key = `${expense.id_}-${person}`;
-    setButtonStates((prev) => ({
-      ...prev,
-      [key]: !prev[key], // Toggle button state
-    }));
+  // const key = `${expense.id_}-${person}`;
+  // setButtonStates((prev) => ({
+  //   ...prev,
+  //   [key]: !prev[key], // Toggle button state
+  // }));
+  function handleButtonClick(expenseId, person) {
+    setExpenses((prevExpenses) =>
+      prevExpenses.map((expense) =>
+        expense.id_ === expenseId
+          ? {
+              ...expense,
+              buttonstates: {
+                ...expense.buttonstates,
+                [person]: !expense.buttonstates[person],
+              },
+            }
+          : expense
+      )
+    );
   }
 
-  function handleCheckBoxClick(expense, person) {
-    const key = `${expense.id_}-${person}`;
-    setCheckboxStates((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-    // console.log(buttonStates);
-    // console.log(checkboxStates);
+  function handleCheckBoxClick(expenseId, person) {
+    setExpenses((prevExpenses) =>
+      prevExpenses.map((expense) =>
+        expense.id_ === expenseId
+          ? {
+              ...expense,
+              checkboxstates: {
+                ...expense.checkboxstates,
+                [person]: !expense.checkboxstates[person],
+              },
+            }
+          : expense
+      )
+    );
   }
-
   const handleSaveButton = async () => {
     const payLoad = expenses.map((expense) => {
       const buttonStateForExpense = {};
       const checkboxStateforExpense = {};
       const transactionCompletePerPerson = {};
       persons.forEach((person) => {
-        const key = `${expense.id_}-${person}`;
-        buttonStateForExpense[person] = buttonStates[key] || false;
-        checkboxStateforExpense[person] = checkboxStates[key] || false;
+        buttonStateForExpense[person] = expense.buttonstates[person] || false;
+        checkboxStateforExpense[person] =
+          expense.checkboxstates[person] || false;
         // console.log(buttonStateForExpense)
 
-        if (buttonStates[key] == true || checkboxStates[key] == true) {
+        if (
+          expense.buttonstates[person] == true ||
+          expense.checkboxstates[person] == true
+        ) {
           transactionCompletePerPerson[person] = true;
         } else {
           transactionCompletePerPerson[person] = false;
@@ -93,7 +76,7 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
       const transactionCompletePerExpense = Object.values(
         transactionCompletePerPerson
       ).every((value) => value === true);
-      console.log(transactionCompletePerExpense);
+      // console.log(transactionCompletePerExpense);
 
       return {
         id: expense.id_,
@@ -117,26 +100,11 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
     }
   };
 
-  const handleDeleteBtn = async (id) => {
-    try {
-      const response = await fetch(`${backend_url}/expenses/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        setExpenses((prevExpenses) =>
-          prevExpenses.filter((expense) => expense.id_ !== id)
-        );
-      }
-    } catch (error) {
-      console.log("error on deletion");
-    }
-  };
-
   const navigate = useNavigate();
   const handleNavigation = () => {
     navigate("/expenses");
   };
+
   // function calculateShare(expense) {
   //   const greenPersons = persons.filter((person) => {
   //     const key = `${expense.item}-${person}`;
@@ -147,55 +115,55 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
   //     : (expense.price / greenPersons.length).toFixed(2);
   // }
 
-  function calculateBalances() {
-    const balances = {};
+  // function calculateBalances() {
+  //   const balances = {};
 
-    persons.forEach((person) => (balances[person] = 0));
-    //  console.log(expenses)
-    expenses.forEach((expense) => {
-      const price = parseFloat(expense.price);
-      // console.log(typeof(price))
-      const greenPersons = persons.filter((person) => {
-        const key = `${expense.id_}-${person}`;
-        return !buttonStates[key];
-      });
+  //   persons.forEach((person) => (balances[person] = 0));
+  //   //  console.log(expenses)
+  //   expenses.forEach((expense) => {
+  //     const price = parseFloat(expense.price);
+  //     // console.log(typeof(price))
+  //     const greenPersons = persons.filter((person) => {
+  //       const key = `${expense.id_}-${person}`;
+  //       return !buttonStates[key];
+  //     });
 
-      if (greenPersons.length > 0) {
-        // console.log(typeof(price))
-        const sharePerPerson = price / greenPersons.length;
+  //     if (greenPersons.length > 0) {
+  //       // console.log(typeof(price))
+  //       const sharePerPerson = price / greenPersons.length;
 
-        greenPersons.forEach((person) => {
-          const key = `${expense.id_}-${person}`;
-          //  console.log(balances[person])
-          balances[person] -= sharePerPerson;
-          // console.log(balances[person])
-          if (checkboxStates[key]) {
-            balances[person] += sharePerPerson;
-            balances[expense.paidBy] -= sharePerPerson;
-          }
-        });
-        balances[expense.paidBy] += price;
-      }
-    });
-    // console.log(balances)
-    // console.log(checkboxStates);
-    return balances;
-  }
+  //       greenPersons.forEach((person) => {
+  //         const key = `${expense.id_}-${person}`;
+  //         //  console.log(balances[person])
+  //         balances[person] -= sharePerPerson;
+  //         // console.log(balances[person])
+  //         if (checkboxStates[key]) {
+  //           balances[person] += sharePerPerson;
+  //           balances[expense.paidBy] -= sharePerPerson;
+  //         }
+  //       });
+  //       balances[expense.paidBy] += price;
+  //     }
+  //   });
+  //   // console.log(balances)
+  //   // console.log(checkboxStates);
+  //   return balances;
+  // }
 
-  const balances = calculateBalances();
+  // const balances = calculateBalances();
 
-  function handleTransactionComplete(person) {
-    expenses.forEach((expense) => {
-      const key = `${expense.id_}-${person}`;
-      setCheckboxStates((prev) => {
-        const updatedStates = { ...prev };
-        updatedStates[key] = !updatedStates[key];
-        return updatedStates;
-      });
-    });
-    // seperateBalances();
-    // console.log(checkboxStates);
-  }
+  // function handleTransactionComplete(person) {
+  //   expenses.forEach((expense) => {
+  //     const key = `${expense.id_}-${person}`;
+  //     setCheckboxStates((prev) => {
+  //       const updatedStates = { ...prev };
+  //       updatedStates[key] = !updatedStates[key];
+  //       return updatedStates;
+  //     });
+  //   });
+  //   // seperateBalances();
+  //   // console.log(checkboxStates);
+  // }
 
   function transactionPerExpense() {
     const transactions = [];
@@ -204,14 +172,13 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
 
       const greenPersons = persons.filter((person) => {
         const key = `${expense.id_}-${person}`;
-        return !buttonStates[key];
+        return !expense.buttonstates[person];
       });
       if (greenPersons.length > 0) {
         const sharePerPerson = price / greenPersons.length;
         greenPersons.forEach((person) => {
-          const key = `${expense.id_}-${person}`;
           if (person !== expense.paidBy) {
-            if (checkboxStates[key]) {
+            if (expense.checkboxstates[person]) {
               transactions.push({
                 from: person,
                 to: expense.paidBy,
@@ -230,8 +197,6 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
         });
       }
     });
-    // console.log(checkboxStates)
-    // console.log(transactions);
     return transactions;
   }
   const transactions = transactionPerExpense();
@@ -257,21 +222,26 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
   const netTransactions = calculateTransactions(transactions);
 
   function handleTransactionComplete([from, to]) {
-    expenses.forEach((expense) => {
-      persons.forEach((person) => {
-        const key = `${expense.id_}-${person}`;
-        if (
-          (person === from && expense.paidBy === to) ||
-          (person === to && expense.paidBy === from)
-        ) {
-          setCheckboxStates((prev) => {
-            const updatedStates = { ...prev };
-            updatedStates[key] = true;
-            return updatedStates;
-          });
-        }
-      });
-    });
+    setExpenses((prevExpenses) =>
+      prevExpenses.map((expense) => {
+        const updatedCheckboxStates = { ...expense.checkboxstates };
+
+        let shouldUpdate = false;
+        persons.forEach((person) => {
+          if (
+            (person === from && expense.paidBy === to) ||
+            (person === to && expense.paidBy === from)
+          ) {
+            updatedCheckboxStates[person] = true;
+            shouldUpdate = true;
+          }
+        });
+
+        return shouldUpdate
+          ? { ...expense, checkboxstates: updatedCheckboxStates }
+          : expense;
+      })
+    );
   }
 
   return (
@@ -282,28 +252,32 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
           <ol>
             {expenses.map((expense, index) => (
               <li key={index}>
-                {expense.item} - {parseFloat(expense.price)} paid by{" "}
-                {expense.paidBy}
-                {/* <br /> */}
-                {/* <strong>Share per person: {calculateShare(expense)}</strong> */}
+                <span>
+                  {expense.item} - {parseFloat(expense.price)} paid by{" "}
+                  {expense.paidBy}
+                </span>
+
                 {persons.map((person) => {
-                  const key = `${expense.id_}-${person}`;
                   return (
                     <button
                       key={person}
                       className="btn-toPay"
                       style={{
-                        backgroundColor: buttonStates[key] ? "red" : "green",
+                        backgroundColor: expense.buttonstates[person]
+                          ? "red"
+                          : "green",
                       }}
-                      onClick={() => handleButtonClick(expense, person)}
+                      onClick={() => handleButtonClick(expense.id_, person)}
                     >
                       {person}
                       <span onClick={(e) => e.stopPropagation()}>
                         <input
                           className="checkbox"
                           type="checkbox"
-                          checked={checkboxStates[key] || false}
-                          onChange={(e) => handleCheckBoxClick(expense, person)}
+                          checked={expense.checkboxstates[person] || false}
+                          onChange={(e) =>
+                            handleCheckBoxClick(expense.id_, person)
+                          }
                         />
                       </span>
                     </button>
@@ -312,7 +286,7 @@ function ExpenseList({ persons = ["mukesh", "aadarsh", "kushal", "niraj"] }) {
                 {/* delete button */}
                 <button
                   className="delete-btn"
-                  onClick={(e) => handleDeleteBtn(expense.id_)}
+                  onClick={(e) => onDelete(expense.id_)}
                 >
                   <FontAwesomeIcon icon={faTrash} />
                 </button>

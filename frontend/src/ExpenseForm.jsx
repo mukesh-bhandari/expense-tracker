@@ -49,10 +49,16 @@ function ExpenseForm({ onAddExpense }) {
                 required
             />
             <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 placeholder="Price"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                    
+                    if (/^\d*(\.\d{0,2})?$/.test(e.target.value)) {
+                        setPrice(e.target.value)
+                      }
+                }}
                 required
             />
             <select 
