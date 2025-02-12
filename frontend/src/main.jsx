@@ -1,6 +1,7 @@
 import React from "react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import '@fontsource/inter';
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -8,6 +9,9 @@ import ExpenseForm from "./ExpenseForm.jsx";
 import ExpenseList from "./ExpenseList.jsx";
 import FullExpenseList from "./DisplayExpense.jsx";
 import { backend_url } from "./util.js";
+
+
+
 
 const expenseLoader = async () => {
   const response = await fetch(backend_url + "/expenses/expenseList");

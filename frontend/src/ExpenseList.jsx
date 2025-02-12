@@ -171,7 +171,6 @@ function ExpenseList({
       const price = parseFloat(expense.price);
 
       const greenPersons = persons.filter((person) => {
-        const key = `${expense.id_}-${person}`;
         return !expense.buttonstates[person];
       });
       if (greenPersons.length > 0) {
@@ -246,9 +245,10 @@ function ExpenseList({
 
   return (
     <>
+    <div className="expense-section">
       {expenses.length > 0 && (
-        <div className="expense-list">
-          <h2>Expense List</h2>
+        <div className="expenses">
+          <h2> Expenses</h2>
           <ol>
             {expenses.map((expense, index) => (
               <li key={index}>
@@ -256,49 +256,53 @@ function ExpenseList({
                   {expense.item} - {parseFloat(expense.price)} paid by{" "}
                   {expense.paidBy}
                 </span>
-
-                {persons.map((person) => {
-                  return (
-                    <button
-                      key={person}
-                      className="btn-toPay"
-                      style={{
-                        backgroundColor: expense.buttonstates[person]
-                          ? "red"
-                          : "green",
-                      }}
-                      onClick={() => handleButtonClick(expense.id_, person)}
-                    >
-                      {person}
-                      <span onClick={(e) => e.stopPropagation()}>
-                        <input
-                          className="checkbox"
-                          type="checkbox"
-                          checked={expense.checkboxstates[person] || false}
-                          onChange={(e) =>
-                            handleCheckBoxClick(expense.id_, person)
-                          }
-                        />
-                      </span>
-                    </button>
-                  );
-                })}
-                {/* delete button */}
-                <button
+                <div className="expenses-btns-container">
+                  {persons.map((person) => {
+                    return (
+                      <button
+                        key={person}
+                        className="btn-toPay"
+                        style={{
+                          backgroundColor: expense.buttonstates[person]
+                            ? "red"
+                            : "green",
+                        }}
+                        onClick={() => handleButtonClick(expense.id_, person)}
+                      >
+                        {person}
+                        <span onClick={(e) => e.stopPropagation()}>
+                          <input
+                            className="checkbox"
+                            type="checkbox"
+                            checked={expense.checkboxstates[person] || false}
+                            onChange={(e) =>
+                              handleCheckBoxClick(expense.id_, person)
+                            }
+                          />
+                        </span>
+                      </button>
+                    );
+                  })}
+                   {/* delete button */}
+                  <button
                   className="delete-btn"
                   onClick={(e) => onDelete(expense.id_)}
                 >
                   <FontAwesomeIcon icon={faTrash} />
                 </button>
+                </div>
+               
+                
               </li>
             ))}
           </ol>
-        </div>
-      )}
-
-      {expenses.length > 0 && (
-        <div className="expense-form">
-          <button onClick={handleSaveButton}>save</button>
+          {expenses.length > 0 && (
+            <div className="save-btn-container">
+              <button onClick={handleSaveButton} className="save-btn">
+                save
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -320,9 +324,9 @@ function ExpenseList({
         </ul>
       </div> */}
 
-      {expenses.length > 0 && (
-        <div className="expense-form">
-          <h2> seperate transaction</h2>
+      {Object.entries(netTransactions).length > 0 && (
+        <div className="transactions">
+          <h2> Transactions</h2>
           <ul>
             {Object.entries(netTransactions).map(([key, amount]) => {
               const [from, to] = key.split("->");
@@ -334,7 +338,7 @@ function ExpenseList({
                     className="transactactionDone"
                     onClick={() => handleTransactionComplete([from, to])}
                   >
-                    transaction complete
+                    Paid
                   </button>
                 </li>
               );
@@ -343,10 +347,11 @@ function ExpenseList({
         </div>
       )}
 
-      <div className="expense-form">
-        <button onClick={handleNavigation}>show expense list</button>
-      </div>
-    </>
+    
+    </div>
+      <div className="expenseList-btn-container">
+      <button onClick={handleNavigation}>Full Expense List</button>
+    </div></>
   );
 }
 

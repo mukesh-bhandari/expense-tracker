@@ -6,13 +6,14 @@ export default function FullExpenseList(){
   const expenses = useLoaderData();
 
   return(
-    <div className="expense-form">
+    <div className="expense-list">
       <h1>Expense List</h1>
       <ol>
         {expenses.map(expense =>(
           <li key={expense.id_}>
-          {expense.item} - {parseFloat(expense.price)} paid by{" "}
-          {expense.paidBy}
+            <span> {expense.item} - {parseFloat(expense.price)} paid by{" "}
+            {expense.paidBy}</span>
+         
           </li>
         ))}
       </ol>

@@ -37,7 +37,8 @@ function ExpenseForm({ onAddExpense }) {
     };
     return (
      <>
-  <h1>Expense Tracker</h1>
+     <div className="expense-form">
+     <h1>Expense Tracker</h1>
        <form 
        className="input-form"
        onSubmit={handleSubmit}>
@@ -67,7 +68,7 @@ function ExpenseForm({ onAddExpense }) {
                 onChange={(e) => setPaidBy(e.target.value)}
                 required
             >
-                 <option value="">Who Paid?</option> 
+                 <option value="" disabled >Who Paid?</option> 
                 <option value="aadarsh">aadarsh</option>
                 <option value="mukesh">mukesh</option>
                 <option value="kushal">kushal</option>
@@ -76,7 +77,9 @@ function ExpenseForm({ onAddExpense }) {
             <button type="submit" disabled={isAdding} >
             {isAdding ? "Adding..." : "Add Expense"}
             </button>
-        </form></>
+        </form>
+     </div>
+     </>
       
     );
 }
