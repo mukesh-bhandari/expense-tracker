@@ -35,7 +35,7 @@ h2 {
 .input-form {
   height: 100px;
 
-  width: 1000px;
+  width: 70%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -265,6 +265,7 @@ input {
     /* margin-bottom: 50px; */
   }
   .input-form {
+    width: 100%;
     display: flex;
     flex-direction: column;
     height: auto;
