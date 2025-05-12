@@ -1,10 +1,20 @@
+require("dotenv").config();
 const cors = require("cors");
 const express = require("express");
 const pool = require("./db");
 const app = express();
-
-app.use(cors());
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Allow frontend URL
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());  
+
 
 // pool
 //   .connect()
@@ -18,16 +28,84 @@ app.use(express.json());
 
 pool.on("error", (err) => {
   console.error("Unexpected error on idle client", err);
-  process.exit(-1); // Exit the process or take appropriate action
+  process.exit(-1); 
 });
 
 const persons = ["mukesh", "aadarsh", "kushal", "niraj"];
 
-app.get("/expenses", async (req, res) => {
+
+//middleware
+
+const authenticateUser = async (req, res, next) => {
+  const token = req.cookies?.accessToken;
+  if (!token) return res.status(401).json({ error: "not authorized" }); // error-no token status
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
+    if (err) {
+      if (err.name === "TokenExpiredError") {  
+
+
+        const refreshToken = req.cookies?.refreshToken;
+        if (refreshToken == null) return res.status(401).json({ error: "no refresh token" });
+        try{
+         const result = await pool.query("SELECT EXISTS (SELECT 1 FROM refresh_tokens WHERE token = $1)", [refreshToken]);
+         if (!result.rows[0].exists) return res.status(403).json({ error: "refresh token not found" });
+        }catch(error){
+          return res.status(403).json({ error: "Refresh token not found" });
+        }
+        
+        //  if (!refreshTokens.includes(refreshToken)) return res.status(403).json({ error: "refresh token not matched" });
+        //  console.log(refreshTokens)
+        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, user) => {
+          if (err) {
+            if (err.name === "TokenExpiredError") { 
+              await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
+              return res.status(403).json({ error: "token expired" });
+           
+
+            }
+            return res.status(403).json({ error: "Invalid refresh token" });
+
+          }
+          const newAccessToken = jwt.sign(
+            { username: user.username },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: "15m" }
+          );
+          res.cookie("accessToken", newAccessToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "Lax",
+            maxAge: 15 * 60 * 1000, 
+          });
+          console.log("token refreshed")
+          // res.json({ message: "Token refreshed" });
+          req.user = user;
+          next();
+        });  
+        
+        
+        // return res.status(401).json({ error: "TokenExpired", err }); // Let frontend know to refresh
+      }else{
+        return res.status(403).json({ error: "Invalid token", err });
+      }
+    
+    }// here 
+    req.user = decoded;
+    next();
+  });
+};
+
+
+
+
+
+app.get("/expenses", authenticateUser,  async (req, res) => {
   try {
+    
     const result = await pool.query(
       "SELECT * FROM expenses WHERE transaction_complete = FALSE ORDER BY id_ ASC"
     );
+
     res.json(result.rows);
   } catch (error) {
     console.error(error.message);
@@ -35,7 +113,7 @@ app.get("/expenses", async (req, res) => {
   }
 });
 
-app.get("/expenses/expenseList", async (req, res) => {
+app.get("/expenses/expenseList", authenticateUser, async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM expenses ORDER BY id_ ASC");
     res.json(result.rows);
@@ -44,6 +122,66 @@ app.get("/expenses/expenseList", async (req, res) => {
     res.status(500).send("server error");
   }
 });
+
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE username = $1", [
+      username,
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: "Invalid user" });
+    } else {
+      const user = result.rows[0];
+
+      const passwordMatch = await bcrypt.compare(password, user.password);
+
+      if (!passwordMatch) {
+        return res.status(401).json({ message: "Invalid password" });
+      }
+
+      const accessToken = jwt.sign(
+        { username: user.username },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "15m" }
+      );
+      const refreshToken = jwt.sign(
+        { username: user.username },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
+      );
+      await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
+
+      await pool.query(
+        "INSERT INTO refresh_tokens (user_id, token) VALUES ($1, $2) ON CONFLICT (token) DO NOTHING",
+        [user.id_, refreshToken]  // Use id_ from users table
+      );
+      // refreshTokens.push(refreshToken);
+
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        maxAge: 15 * 60 * 1000, 
+      });
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        maxAge: 7 *24* 60 * 60 * 1000, 
+      });
+
+      res.json({ message: "Login Successfull" });
+    }
+  } catch (error) {
+    // console.log("server error", error)
+    res.status(500).json({ message: "Error loggin in",  });
+  }
+});
+
+// insert here 
 
 app.post("/expenses", async (req, res) => {
   // console.log(req.body)
