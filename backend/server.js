@@ -7,12 +7,12 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 app.use(
-  cors({
-    origin: ["http://localhost:5173",
-      "https://nirajkokharcha.vercel.app"
-    ], 
+  cors(
+    {
+     origin:  [process.env.FRONTEND_DEV_URL, process.env.FRONTEND_PROD_URL],
     credentials: true,
-  })
+  }
+  )
 );
 app.use(express.json());
 app.use(cookieParser());  
@@ -75,8 +75,8 @@ const authenticateUser = async (req, res, next) => {
           );
           res.cookie("accessToken", newAccessToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: "Lax",
+            secure: true,
+            sameSite: "None",
             maxAge: 15 * 60 * 1000, 
           });
           console.log("token refreshed")
@@ -164,22 +164,22 @@ app.post("/login", async (req, res) => {
 
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
+        secure: true,
+        sameSite: "None",
         maxAge: 15 * 60 * 1000, 
       });
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
+        secure: true,
+        sameSite: "None",
         maxAge: 7 *24* 60 * 60 * 1000, 
       });
 
       res.json({ message: "Login Successfull" });
     }
   } catch (error) {
-    // console.log("server error", error)
-    res.status(500).json({ message: "Error loggin in",  });
+    console.log("server error", error)
+    res.status(500).json({ message: "Error login in",  });
   }
 });
 

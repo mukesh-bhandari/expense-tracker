@@ -16,7 +16,7 @@ function ExpenseForm({ onAddExpense }) {
             const newExpense = {id: Date.now(), item, price: parseFloat(price), paidBy };
 
             try {
-                const response = await fetch("/api/expenses", {
+                const response = await fetch(backend_url + "/expenses", {
 
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
