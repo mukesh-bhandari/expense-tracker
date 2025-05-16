@@ -19,6 +19,7 @@ function ExpenseForm({ onAddExpense }) {
                 const response = await fetch(backend_url + "/expenses", {
 
                     method: "POST",
+                    credentials: "include",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newExpense),
                 });

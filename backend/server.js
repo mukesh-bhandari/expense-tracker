@@ -14,6 +14,7 @@ app.use(
   }
   )
 );
+
 app.use(express.json());
 app.use(cookieParser());  
 
@@ -41,7 +42,7 @@ const persons = ["mukesh", "aadarsh", "kushal", "niraj"];
 
 const authenticateUser = async (req, res, next) => {
   const token = req.cookies?.accessToken;
-  if (!token) return res.status(401).json({ error: "not authorized" }); // error-no token status
+  if (!token) return res.status(401).json({ error: "not authorized" }); 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
     if (err) {
       if (err.name === "TokenExpiredError") {  
@@ -54,8 +55,7 @@ const authenticateUser = async (req, res, next) => {
          if (!result.rows[0].exists) return res.status(403).json({ error: "refresh token not found" });
         }catch(error){
           return res.status(403).json({ error: "Refresh token not found" });
-        }
-        
+        }       
         //  if (!refreshTokens.includes(refreshToken)) return res.status(403).json({ error: "refresh token not matched" });
         //  console.log(refreshTokens)
         jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, user) => {
