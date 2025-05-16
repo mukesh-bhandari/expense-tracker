@@ -15,7 +15,7 @@ import { redirect } from "react-router-dom";
 
 
 const expenseLoader = async () => {
-  let response = await fetch( backend_url + "/expenses/expenseList", {
+  let response = await fetch( backend_url + "/api/expenses/expenseList", {
     method: "GET",
     credentials: "include",
   });
@@ -50,7 +50,7 @@ const AppContent = () => {
   const [expenses, setExpenses] = useState([]);
   const fetchExpenses = async () => {
     try {
-      let response = await fetch(backend_url + "/expenses", {
+      let response = await fetch(backend_url + "/api/expenses", {
         method: "GET",
         credentials: "include",
         headers: {
@@ -112,7 +112,7 @@ const AppContent = () => {
 
   const handleDeleteBtn = async (id) => {
     try {
-      const response = await fetch(`${backend_url}/expenses/${id}`, {
+      const response = await fetch(`${backend_url}/api/expenses/${id}`, {
         method: "DELETE",
       });
 

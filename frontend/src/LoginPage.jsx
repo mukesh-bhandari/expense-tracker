@@ -12,7 +12,7 @@ function LoginPage() {
     e.preventDefault();
     
     try {
-      const response = await fetch(backend_url + "/login", {
+      const response = await fetch(backend_url + "/api/login", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

@@ -102,7 +102,7 @@ const authenticateUser = async (req, res, next) => {
 
 
 
-app.get("/expenses", authenticateUser,  async (req, res) => {
+app.get("/api/expenses", authenticateUser,  async (req, res) => {
   try {
     
     const result = await pool.query(
@@ -116,7 +116,7 @@ app.get("/expenses", authenticateUser,  async (req, res) => {
   }
 });
 
-app.get("/expenses/expenseList", authenticateUser, async (req, res) => {
+app.get("/api/expenses/expenseList", authenticateUser, async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM expenses ORDER BY id_ ASC");
     res.json(result.rows);
@@ -126,7 +126,7 @@ app.get("/expenses/expenseList", authenticateUser, async (req, res) => {
   }
 });
 
-app.post("/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
@@ -186,7 +186,7 @@ app.post("/login", async (req, res) => {
 
 // insert here 
 
-app.post("/expenses", async (req, res) => {
+app.post("/api/expenses", async (req, res) => {
   // console.log(req.body)
   const newExpense = { ...req.body };
   const { id, item, price, paidBy } = newExpense;
@@ -210,7 +210,7 @@ app.post("/expenses", async (req, res) => {
   }
 });
 
-app.post("/expenses/save-states", async (req, res) => {
+app.post("/api/expenses/save-states", async (req, res) => {
   const expenses = req.body;
 
   try {
@@ -231,7 +231,7 @@ app.post("/expenses/save-states", async (req, res) => {
   }
 });
 
-app.delete("/expenses/:id", async (req, res) => {
+app.delete("/api/expenses/:id", async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query("DELETE FROM expenses WHERE id_ = $1", [id]);

@@ -87,7 +87,7 @@ function ExpenseList({
     });
 
     try {
-      const response = await fetch( backend_url + "/expenses/save-states", {
+      const response = await fetch( backend_url + "/api/expenses/save-states", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payLoad),
