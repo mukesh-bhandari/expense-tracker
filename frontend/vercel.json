@@ -3,6 +3,10 @@
     {
       "source": "/api/(.*)",
       "destination": "https://expense-tracker-backend-pied.vercel.app/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
     }
   ]
 }
