@@ -13,21 +13,30 @@ import LoginPage from "./LoginPage.jsx";
 import { useNavigate } from "react-router-dom";
 import { redirect } from "react-router-dom";
 
-
 const expenseLoader = async () => {
-  let response = await fetch( "/api/expenses/expenseList", {
+  let response = await fetch("/api/expenses/expenseList", {
     method: "GET",
     credentials: "include",
   });
+
+   if (response.status === 401) {
+    response = await fetch("/api/expenses/expenseList", {
+      method: "GET",
+      credentials: "include",
+    });
+    if (response.status === 401) {
+      return redirect("/login");
+    }
+  }
+
   // if (response.status === 401) {
-    
+
   //  const refreshResponse = await fetch("/api/refresh", {
   //     method: "POST",
   //     credentials: "include",
   //   });
 
-  
-  //   if (refreshResponse.ok) {
+  // if (refreshResponse.ok) {
   //     response = await fetch("/api/expenses/expenseList", {
   //       method: "GET",
   //       credentials: "include",
@@ -55,22 +64,21 @@ const AppContent = () => {
         credentials: "include",
         headers: {
           "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Pragma": "no-cache",
-          "Expires": "0"
-        }
+          Pragma: "no-cache",
+          Expires: "0",
+        },
       });
       // if (response.status == 200) {
       //   const data = await response.json();
       //   setExpenses(data);
       //   // console.log(data)
       // }
-      // if (response.status === 401) {    
+      // if (response.status === 401) {
       //   const refreshResponse = await fetch("/api/refresh", {
       //     method: "POST",
       //     credentials: "include",
       //   });
 
-       
       //   if (refreshResponse.ok) {
       //     response = await fetch("/api/expenses", {
       //       method: "GET",
@@ -81,19 +89,23 @@ const AppContent = () => {
       //     return
       //     // throw new Error("Session expired. Please log in again.");
       //   }
-      // } 
-      if (!response.ok) {
-        navigate("/login")
-        return
-          }else if (response.status === 200) {
-            const data = await response.json();
-            setExpenses(data);
+      // }
 
-        //   if (response.status === 200) {
-        // const data = await response.json();
-        // setExpenses(data);
-        // console.log(data)
+      if (response.status === 401) {
+        response = await fetch("/api/expenses", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (response.status === 401) {
+          navigate("/login");
+          return;
+        }
       }
+   
+        if (response.ok) {
+          const data = await response.json();
+          setExpenses(data);
+        }
     } catch (error) {
       console.error("Error fetching expenses:", error);
     }
@@ -110,24 +122,24 @@ const AppContent = () => {
     // console.log(expenses);
   };
 
-  const handleDeleteBtn = async (id) => {
-    try {
-      const response = await fetch(`/api/expenses/${id}`, {
-        method: "DELETE",
-      });
+  // const handleDeleteBtn = async (id) => {
+  //   try {
+  //     const response = await fetch(`/api/expenses/${id}`, {
+  //       method: "DELETE",
+  //     });
 
-      if (response.ok) {
-        setExpenses((prevExpenses) => {
-          const updatedExpenses = prevExpenses.filter(
-            (expense) => expense.id_ !== id
-          );
-          return updatedExpenses;
-        });
-      }
-    } catch (error) {
-      console.log("error on deletion");
-    }
-  };
+  //     if (response.ok) {
+  //       setExpenses((prevExpenses) => {
+  //         const updatedExpenses = prevExpenses.filter(
+  //           (expense) => expense.id_ !== id
+  //         );
+  //         return updatedExpenses;
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.log("error on deletion");
+  //   }
+  // };
 
   return (
     <>
@@ -135,7 +147,7 @@ const AppContent = () => {
       <ExpenseList
         persons={["mukesh", "aadarsh", "kushal", "niraj"]}
         newExpense={expenses}
-        onDelete={handleDeleteBtn}
+        // onDelete={handleDeleteBtn}
       />
     </>
   );

@@ -41,62 +41,129 @@ const persons = ["mukesh", "aadarsh", "kushal", "niraj"];
 
 //middleware
 
-const authenticateUser = async (req, res, next) => {
-  const token = req.cookies?.accessToken;
-  if (!token) return res.status(401).json({ error: "not authorized" }); 
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
-    if (err) {
-      if (err.name === "TokenExpiredError") {  
+// const authenticateUser = async (req, res, next) => {
+//   const token = req.cookies?.accessToken;
+//   if (!token) return res.status(401).json({ error: "not authorized" }); 
+//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
+//     if (err) {
+//       if (err.name === "TokenExpiredError") {  
 
 
-        const refreshToken = req.cookies?.refreshToken;
-        if (refreshToken == null) return res.status(401).json({ error: "no refresh token" });
-        try{
-         const result = await pool.query("SELECT EXISTS (SELECT 1 FROM refresh_tokens WHERE token = $1)", [refreshToken]);
-         if (!result.rows[0].exists) return res.status(403).json({ error: "refresh token not found" });
-        }catch(error){
-          return res.status(403).json({ error: "Refresh token not found" });
-        }       
-        //  if (!refreshTokens.includes(refreshToken)) return res.status(403).json({ error: "refresh token not matched" });
-        //  console.log(refreshTokens)
-        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, user) => {
-          if (err) {
-            if (err.name === "TokenExpiredError") { 
-              await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
-              return res.status(403).json({ error: "token expired" });
+//         const refreshToken = req.cookies?.refreshToken;
+//         if (refreshToken == null) return res.status(401).json({ error: "no refresh token" });
+//         try{
+//          const result = await pool.query("SELECT EXISTS (SELECT 1 FROM refresh_tokens WHERE token = $1)", [refreshToken]);
+//          if (!result.rows[0].exists) return res.status(403).json({ error: "refresh token not found" });
+//         }catch(error){
+//           return res.status(403).json({ error: "Refresh token not found" });
+//         }       
+//         //  if (!refreshTokens.includes(refreshToken)) return res.status(403).json({ error: "refresh token not matched" });
+//         //  console.log(refreshTokens)
+//         jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, user) => {
+//           if (err) {
+//             if (err.name === "TokenExpiredError") { 
+//               await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
+//               return res.status(403).json({ error: "token expired" });
            
 
-            }
-            return res.status(403).json({ error: "Invalid refresh token" });
+//             }
+//             return res.status(403).json({ error: "Invalid refresh token" });
 
-          }
-          const newAccessToken = jwt.sign(
-            { username: user.username },
-            process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: "15m" }
-          );
-          res.cookie("accessToken", newAccessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "None",
-            maxAge: 15 * 60 * 1000, 
-          });
-          console.log("token refreshed")
-          // res.json({ message: "Token refreshed" });
-          req.user = user;
-          next();
-        });  
+//           }
+//           const newAccessToken = jwt.sign(
+//             { username: user.username },
+//             process.env.ACCESS_TOKEN_SECRET,
+//             { expiresIn: "15m" }
+//           );
+//           res.cookie("accessToken", newAccessToken, {
+//             httpOnly: true,
+//             secure: true,
+//             sameSite: "None",
+//             maxAge: 15 * 60 * 1000, 
+//           });
+//           console.log("token refreshed")
+//           // res.json({ message: "Token refreshed" });
+//           req.user = user;
+//           next();
+//         });  
         
         
-        // return res.status(401).json({ error: "TokenExpired", err }); // Let frontend know to refresh
-      }else{
-        return res.status(403).json({ error: "Invalid token", err });
-      }
+//         // return res.status(401).json({ error: "TokenExpired", err }); // Let frontend know to refresh
+//       }else{
+//         return res.status(403).json({ error: "Invalid token", err });
+//       }
     
-    }// here 
+//     }// here 
+//     req.user = decoded;
+//     next();
+//   });
+// };
+
+
+const authenticateUser = async (req, res, next) => {
+  const token = req.cookies?.accessToken;
+  // console.log("Token:", token);
+  if (!token) {
+    return res.status(401).json({ error: "not authorized" });
+  }
+
+  try {
+    // Try to verify access token
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     req.user = decoded;
-    next();
-  });
+    return next();
+  } catch (err) {
+    // If token expired, try to use refresh token
+    if (err.name === "TokenExpiredError") {
+      const refreshToken = req.cookies?.refreshToken;
+      if (!refreshToken) {
+        return res.status(401).json({ error: "no refresh token" });
+     
+      }
+      // Check if refresh token exists in DB
+      try {
+        const result = await pool.query(
+          "SELECT EXISTS (SELECT 1 FROM refresh_tokens WHERE token = $1)",
+          [refreshToken]
+        );
+        if (!result.rows[0].exists) {
+          return res.status(401).json({ error: "refresh token not found" });
+        }
+      } catch (dbErr) {
+        return res.status(401).json({ error: "Refresh token not found" });
+      }
+
+      // Verify refresh token and issue new access token
+      try {
+        const user = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+       console.log("new access token created ");
+        const newAccessToken = jwt.sign(
+          { username: user.username },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: "15m" }
+        );
+        res.cookie("accessToken", newAccessToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+        req.user = user;
+        return next();
+      } catch (refreshErr) {
+        // If refresh token expired, remove from DB
+        if (refreshErr.name === "TokenExpiredError") {
+          await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
+         console.log("Refresh token expired, removed from DB");
+          return res.status(401).json({ error: "refresh token expired" });
+        }
+        console.log("Invalid refresh token", refreshErr);
+        return res.status(401).json({ error: "Invalid refresh token" });
+      }
+    }
+    // Any other error
+    return res.status(401).json({ error: "Invalid access token" });
+  }
 };
 
 
@@ -139,7 +206,6 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid user" });
     } else {
       const user = result.rows[0];
-
       const passwordMatch = await bcrypt.compare(password, user.password);
 
       if (!passwordMatch) {
@@ -156,36 +222,35 @@ app.post("/api/login", async (req, res) => {
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: "7d" }
       );
-      await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
+      await pool.query("DELETE FROM refresh_tokens WHERE user_id = $1", [user.id_,]);
 
       await pool.query(
         "INSERT INTO refresh_tokens (user_id, token) VALUES ($1, $2) ON CONFLICT (token) DO NOTHING",
-        [user.id_, refreshToken]  // Use id_ from users table
+        [user.id_, refreshToken] 
       );
       // refreshTokens.push(refreshToken);
 
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: true,
-        sameSite: "None",
-        maxAge: 15 * 60 * 1000, 
+        secure: true, 
+        sameSite: "lax",
+        maxAge:  7 * 24 * 60 * 60 * 1000,
       });
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "None",
-        maxAge: 7 *24* 60 * 60 * 1000, 
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
       res.json({ message: "Login Successfull" });
     }
   } catch (error) {
-    console.log("server error", error)
-    res.status(500).json({ message: "Error login in",  });
+    console.log("server error", error);
+    res.status(500).json({ message: "Error login in" });
   }
 });
-
-// insert here 
+ 
 
 app.post("/api/expenses", async (req, res) => {
   // console.log(req.body)
@@ -232,14 +297,18 @@ app.post("/api/expenses/save-states", async (req, res) => {
   }
 });
 
-app.delete("/api/expenses/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    await pool.query("DELETE FROM expenses WHERE id_ = $1", [id]);
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete expense" });
-  }
+// app.delete("/api/expenses/:id", async (req, res) => {
+//   const { id } = req.params;
+//   try {
+//     await pool.query("DELETE FROM expenses WHERE id_ = $1", [id]);
+//     res.json({ success: true });
+//   } catch (error) {
+//     res.status(500).json({ error: "Failed to delete expense" });
+//   }
+// });
+
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
 });
 
 app.listen(5000, () => {
