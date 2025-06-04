@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 function ExpenseList({
   persons = ["mukesh", "aadarsh", "kushal", "niraj"],
   newExpense,
-  onDelete,
+  // onDelete,
 }) {
   const [expenses, setExpenses] = useState([]);
 
@@ -87,7 +87,7 @@ function ExpenseList({
     });
 
     try {
-      const response = await fetch(backend_url + "/expenses/save-states", {
+      const response = await fetch("/api/expenses/save-states", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payLoad),
@@ -245,68 +245,66 @@ function ExpenseList({
 
   return (
     <>
-    <div className="expense-section">
-      {expenses.length > 0 && (
-        <div className="expenses">
-          <h2> Expenses</h2>
-          <ol>
-            {expenses.map((expense, index) => (
-              <li key={index}>
-                <span>
-                  {expense.item} - {parseFloat(expense.price)} paid by{" "}
-                  {expense.paidBy}
-                </span>
-                <div className="expenses-btns-container">
-                  {persons.map((person) => {
-                    return (
-                      <button
-                        key={person}
-                        className="btn-toPay"
-                        style={{
-                          backgroundColor: expense.buttonstates[person]
-                            ? "red"
-                            : "green",
-                        }}
-                        onClick={() => handleButtonClick(expense.id_, person)}
-                      >
-                        {person}
-                        <span onClick={(e) => e.stopPropagation()}>
-                          <input
-                            className="checkbox"
-                            type="checkbox"
-                            checked={expense.checkboxstates[person] || false}
-                            onChange={(e) =>
-                              handleCheckBoxClick(expense.id_, person)
-                            }
-                          />
-                        </span>
-                      </button>
-                    );
-                  })}
-                   {/* delete button */}
-                  <button
-                  className="delete-btn"
-                  onClick={(e) => onDelete(expense.id_)}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
+      <div className="expense-section">
+        {expenses.length > 0 && (
+          <div className="expenses">
+            <h2> Expenses</h2>
+            <ol>
+              {expenses.map((expense, index) => (
+                <li key={index}>
+                  <span>
+                    {expense.item} - {parseFloat(expense.price)} paid by{" "}
+                    {expense.paidBy}
+                  </span>
+                  <div className="expenses-btns-container">
+                    {persons.map((person) => {
+                      return (
+                        <button
+                          key={person}
+                          className="btn-toPay"
+                          style={{
+                            backgroundColor: expense.buttonstates[person]
+                              ? "red"
+                              : "green",
+                          }}
+                          onClick={() => handleButtonClick(expense.id_, person)}
+                        >
+                          {person}
+                          <span onClick={(e) => e.stopPropagation()}>
+                            <input
+                              className="checkbox"
+                              type="checkbox"
+                              checked={expense.checkboxstates[person] || false}
+                              onChange={(e) =>
+                                handleCheckBoxClick(expense.id_, person)
+                              }
+                            />
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {/* delete button */}
+                    {/* <button
+                      className="delete-btn"
+                      onClick={(e) => onDelete(expense.id_)}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </button> */}
+                  </div>
+                </li>
+              ))}
+            </ol>
+            {expenses.length > 0 && (
+              <div className="save-btn-container">
+                <button onClick={handleSaveButton} className="save-btn">
+                  save
                 </button>
-                </div>
-               
-                
-              </li>
-            ))}
-          </ol>
-          {expenses.length > 0 && (
-            <div className="save-btn-container">
-              <button onClick={handleSaveButton} className="save-btn">
-                save
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* <div className="expense-form">
+        {/* <div className="expense-form">
         <h2>Final Balances:</h2>
         <ul>
           {Object.entries(balances).map(([person, balance]) => (
@@ -324,34 +322,33 @@ function ExpenseList({
         </ul>
       </div> */}
 
-      {Object.entries(netTransactions).length > 0 && (
-        <div className="transactions">
-          <h2> Transactions</h2>
-          <ul>
-            {Object.entries(netTransactions).map(([key, amount]) => {
-              const [from, to] = key.split("->");
+        {Object.entries(netTransactions).length > 0 && (
+          <div className="transactions">
+            <h2> Transactions</h2>
+            <ul>
+              {Object.entries(netTransactions).map(([key, amount]) => {
+                const [from, to] = key.split("->");
 
-              return (
-                <li key={key}>
-                  {from} owes {to} {amount.toFixed(2)}
-                  <button
-                    className="transactactionDone"
-                    onClick={() => handleTransactionComplete([from, to])}
-                  >
-                    Paid
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-
-    
-    </div>
+                return (
+                  <li key={key}>
+                    {from} owes {to} {amount.toFixed(2)}
+                    <button
+                      className="transactactionDone"
+                      onClick={() => handleTransactionComplete([from, to])}
+                    >
+                      Paid
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+      </div>
       <div className="expenseList-btn-container">
-      <button onClick={handleNavigation}>Full Expense List</button>
-    </div></>
+        <button onClick={handleNavigation}>Full Expense List</button>
+      </div>
+    </>
   );
 }
 

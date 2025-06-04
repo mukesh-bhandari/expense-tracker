@@ -8,6 +8,7 @@ function ExpenseForm({ onAddExpense }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("submitted")
         if(isAdding) return;
         setIsAdding(true);
 
@@ -15,9 +16,10 @@ function ExpenseForm({ onAddExpense }) {
             const newExpense = {id: Date.now(), item, price: parseFloat(price), paidBy };
 
             try {
-                const response = await fetch(backend_url+"/expenses", {
+                const response = await fetch( "/api/expenses", {
 
                     method: "POST",
+                    credentials: "include",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newExpense),
                 });
