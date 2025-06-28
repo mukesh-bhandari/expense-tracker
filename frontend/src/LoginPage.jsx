@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { backend_url } from "./util";
 import { useNavigate } from "react-router-dom";
-import './Login.css';
+import './login.css';
 
 
 function LoginPage() {
