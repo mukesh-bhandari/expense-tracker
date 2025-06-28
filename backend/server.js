@@ -6,20 +6,17 @@ const app = express();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const BS = require("bikram-sambat-js");
 
 app.use(
-  cors(
-    {
-     origin:  [process.env.FRONTEND_DEV_URL, process.env.FRONTEND_PROD_URL],
+  cors({
+    origin: [process.env.FRONTEND_DEV_URL, process.env.FRONTEND_PROD_URL],
     credentials: true,
-  }
-  )
+  })
 );
 
 app.use(express.json());
-app.use(cookieParser());  
-
-
+app.use(cookieParser());
 
 // pool
 //   .connect()
@@ -33,21 +30,19 @@ app.use(cookieParser());
 
 pool.on("error", (err) => {
   console.error("Unexpected error on idle client", err);
-  process.exit(-1); 
+  process.exit(-1);
 });
 
 const persons = ["mukesh", "aadarsh", "kushal", "niraj"];
-
 
 //middleware
 
 // const authenticateUser = async (req, res, next) => {
 //   const token = req.cookies?.accessToken;
-//   if (!token) return res.status(401).json({ error: "not authorized" }); 
+//   if (!token) return res.status(401).json({ error: "not authorized" });
 //   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
 //     if (err) {
-//       if (err.name === "TokenExpiredError") {  
-
+//       if (err.name === "TokenExpiredError") {
 
 //         const refreshToken = req.cookies?.refreshToken;
 //         if (refreshToken == null) return res.status(401).json({ error: "no refresh token" });
@@ -56,15 +51,14 @@ const persons = ["mukesh", "aadarsh", "kushal", "niraj"];
 //          if (!result.rows[0].exists) return res.status(403).json({ error: "refresh token not found" });
 //         }catch(error){
 //           return res.status(403).json({ error: "Refresh token not found" });
-//         }       
+//         }
 //         //  if (!refreshTokens.includes(refreshToken)) return res.status(403).json({ error: "refresh token not matched" });
 //         //  console.log(refreshTokens)
 //         jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, user) => {
 //           if (err) {
-//             if (err.name === "TokenExpiredError") { 
+//             if (err.name === "TokenExpiredError") {
 //               await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
 //               return res.status(403).json({ error: "token expired" });
-           
 
 //             }
 //             return res.status(403).json({ error: "Invalid refresh token" });
@@ -79,26 +73,24 @@ const persons = ["mukesh", "aadarsh", "kushal", "niraj"];
 //             httpOnly: true,
 //             secure: true,
 //             sameSite: "None",
-//             maxAge: 15 * 60 * 1000, 
+//             maxAge: 15 * 60 * 1000,
 //           });
 //           console.log("token refreshed")
 //           // res.json({ message: "Token refreshed" });
 //           req.user = user;
 //           next();
-//         });  
-        
-        
+//         });
+
 //         // return res.status(401).json({ error: "TokenExpired", err }); // Let frontend know to refresh
 //       }else{
 //         return res.status(403).json({ error: "Invalid token", err });
 //       }
-    
-//     }// here 
+
+//     }// here
 //     req.user = decoded;
 //     next();
 //   });
 // };
-
 
 const authenticateUser = async (req, res, next) => {
   const token = req.cookies?.accessToken;
@@ -118,7 +110,6 @@ const authenticateUser = async (req, res, next) => {
       const refreshToken = req.cookies?.refreshToken;
       if (!refreshToken) {
         return res.status(401).json({ error: "no refresh token" });
-     
       }
       // Check if refresh token exists in DB
       try {
@@ -130,13 +121,13 @@ const authenticateUser = async (req, res, next) => {
           return res.status(401).json({ error: "refresh token not found" });
         }
       } catch (dbErr) {
-        return res.status(401).json({ error: "Refresh token not found" });
+        return res.status(401).json({ error: "Refresh token not found in db" });
       }
 
       // Verify refresh token and issue new access token
       try {
         const user = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-       console.log("new access token created ");
+        console.log("new access token created ");
         const newAccessToken = jwt.sign(
           { username: user.username },
           process.env.ACCESS_TOKEN_SECRET,
@@ -153,8 +144,10 @@ const authenticateUser = async (req, res, next) => {
       } catch (refreshErr) {
         // If refresh token expired, remove from DB
         if (refreshErr.name === "TokenExpiredError") {
-          await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [refreshToken]);
-         console.log("Refresh token expired, removed from DB");
+          await pool.query("DELETE FROM refresh_tokens WHERE token = $1", [
+            refreshToken,
+          ]);
+          console.log("Refresh token expired, removed from DB");
           return res.status(401).json({ error: "refresh token expired" });
         }
         console.log("Invalid refresh token", refreshErr);
@@ -166,13 +159,8 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
-
-
-
-
-app.get("/api/expenses", authenticateUser,  async (req, res) => {
+app.get("/api/expenses", authenticateUser, async (req, res) => {
   try {
-    
     const result = await pool.query(
       "SELECT * FROM expenses WHERE transaction_complete = FALSE ORDER BY id_ ASC"
     );
@@ -222,19 +210,21 @@ app.post("/api/login", async (req, res) => {
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: "7d" }
       );
-      await pool.query("DELETE FROM refresh_tokens WHERE user_id = $1", [user.id_,]);
+      await pool.query("DELETE FROM refresh_tokens WHERE user_id = $1", [
+        user.id_,
+      ]);
 
       await pool.query(
         "INSERT INTO refresh_tokens (user_id, token) VALUES ($1, $2) ON CONFLICT (token) DO NOTHING",
-        [user.id_, refreshToken] 
+        [user.id_, refreshToken]
       );
       // refreshTokens.push(refreshToken);
 
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: true, 
+        secure: true,
         sameSite: "lax",
-        maxAge:  7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -250,24 +240,30 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ message: "Error login in" });
   }
 });
- 
 
 app.post("/api/expenses", async (req, res) => {
   // console.log(req.body)
   const newExpense = { ...req.body };
-  const { id, item, price, paidBy } = newExpense;
+  const { id, item, price, paidBy, date } = newExpense;
   const buttonstates = {};
   const checkboxstates = {};
-
+ console.log(date)
   persons.forEach((person) => {
     buttonstates[person] = false;
     checkboxstates[person] = person === paidBy;
   });
+  
+  let dateToInsert = date ;
+  if(date === ""){
+    const currentDate = new Date();
+     dateToInsert  = BS.ADToBS(currentDate); 
+  }
+  console.log(dateToInsert) 
 
   try {
     const result = await pool.query(
-      `INSERT INTO EXPENSES (id_, item, price, "paidBy", buttonstates, checkboxstates) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [id, item, price, paidBy, buttonstates, checkboxstates]
+      `INSERT INTO EXPENSES (id_, item, price, "paidBy", buttonstates, checkboxstates, bs_date) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [id, item, price, paidBy, buttonstates, checkboxstates, dateToInsert]
     );
     res.status(200).json(result.rows[0]);
   } catch (error) {
@@ -297,6 +293,29 @@ app.post("/api/expenses/save-states", async (req, res) => {
   }
 });
 
+app.get("/api/pastExpenses/:id", async (req, res) =>{
+const {id} = req.params;
+  const currentDate = new Date();
+   const  bs_date  = BS.ADToBS(currentDate); 
+    const month =  bs_date.split("-")[1];
+    monthToSearch =Number(month)  - Number(id);
+    if(monthToSearch < 1){
+      monthToSearch +=12;
+    }
+     const monthStr = monthToSearch.toString().padStart(2, "0");
+ try {
+    const result = await pool.query(
+      `SELECT * FROM expenses WHERE SPLIT_PART(bs_date, '-', 2) = $1 ORDER BY id_ ASC`,
+      [monthStr]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("server error");
+  }
+})
+
+
 // app.delete("/api/expenses/:id", async (req, res) => {
 //   const { id } = req.params;
 //   try {
@@ -307,8 +326,30 @@ app.post("/api/expenses/save-states", async (req, res) => {
 //   }
 // });
 
+// app.get("/api/date", async (req, res) => {
+//   try {
+//     const result = await pool.query("select id_ from expenses");
+
+//     for (const row of result.rows) {
+//       const timestamp = Number(row.id_);
+//       const date = new Date(timestamp);
+
+//       const bsDateStr = BS.ADToBS(date); // returns "2081-10-8" (string)
+//       await pool.query("UPDATE expenses SET bs_date = $1 WHERE id_ = $2", [
+//         bsDateStr,
+//         row.id_,
+//       ]);
+//     }
+//     res.json({ message: "bs_date column backfilled for all expenses." });
+//   } catch (error) {
+//     console.log("error in date api", error);
+//     res.status(500).json({ error: "Failed to backfill bs_date" });
+//   }
+// });
+
+
 app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
+  res.status(404).json({ message: "Route no found" });
 });
 
 app.listen(5000, () => {

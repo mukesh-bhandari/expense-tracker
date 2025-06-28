@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { backend_url } from "./util";
+import {NepaliDatePicker} from "nepali-datepicker-reactjs";
+
 function ExpenseForm({ onAddExpense }) {
     const [item, setItem] = useState("");
     const [price, setPrice] = useState("");
     const [paidBy, setPaidBy] = useState("");
+    const [date, setDate] = useState("");
     const [isAdding, setIsAdding] = useState(false)
 
     const handleSubmit = async (e) => {
@@ -13,7 +16,7 @@ function ExpenseForm({ onAddExpense }) {
         setIsAdding(true);
 
         if (item && price && paidBy) {
-            const newExpense = {id: Date.now(), item, price: parseFloat(price), paidBy };
+            const newExpense = {id: Date.now(), item, price: parseFloat(price), paidBy, date};
 
             try {
                 const response = await fetch( "/api/expenses", {
@@ -30,6 +33,7 @@ function ExpenseForm({ onAddExpense }) {
                 setItem("");
                 setPrice("");
                 setPaidBy("");
+                setDate("");
             } catch (error) {
                 console.error("Error adding expense:", error);
             }finally{
@@ -76,6 +80,14 @@ function ExpenseForm({ onAddExpense }) {
                 <option value="kushal">kushal</option>
                 <option value="niraj">niraj</option>
             </select>
+                <NepaliDatePicker
+                    inputClassName="input-date"
+                    className="date-selector"
+                    placeholder= "date"
+                    value={date}
+                    onChange={( value ) =>   setDate(value)}
+                    options={{ calenderLocale: "en", valueLocale: "en" }}
+                />
             <button type="submit" disabled={isAdding} >
             {isAdding ? "Adding..." : "Add Expense"}
             </button>

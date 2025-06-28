@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { backend_url } from "./util";
 import { useNavigate } from "react-router-dom";
+import './Login.css';
 
 
 function LoginPage() {
@@ -31,16 +32,30 @@ function LoginPage() {
     }
   
   };
-  return (
-    <>
-      <h1>login</h1>
-      <form onSubmit={handleSubmit}>
-        <input type="text" placeholder="username" value={username} 
-        onChange={(e)=> setUsername(e.target.value)} required></input>
-        <input type="password" placeholder="password" value={password} onChange={(e)=> setPassword(e.target.value)} required></input>
-        <button type="submit">submit</button>
-      </form>
-    </>
+return (
+   <div className="login-container">
+  <h1 className="login-title">Login</h1>
+  <form className="login-form" onSubmit={handleSubmit}>
+    <input
+      type="text"
+      placeholder="Username"
+      value={username}
+      onChange={(e) => setUsername(e.target.value)}
+      required
+      className="login-input"
+    />
+    <input
+      type="password"
+      placeholder="Password"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      required
+      className="login-input"
+    />
+    <button type="submit" className="login-button">Sign In</button>
+  </form>
+</div>
   );
+
 }
 export default LoginPage;

@@ -11,6 +11,7 @@ function ExpenseList({
   // onDelete,
 }) {
   const [expenses, setExpenses] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setExpenses(newExpense);
@@ -53,6 +54,8 @@ function ExpenseList({
     );
   }
   const handleSaveButton = async () => {
+    if (isSaving) return; 
+    setIsSaving(true);
     const payLoad = expenses.map((expense) => {
       const buttonStateForExpense = {};
       const checkboxStateforExpense = {};
@@ -97,6 +100,8 @@ function ExpenseList({
       }
     } catch (error) {
       console.error("error saving states", error);
+    }finally{
+      setIsSaving(false);
     }
   };
 
@@ -296,8 +301,11 @@ function ExpenseList({
             </ol>
             {expenses.length > 0 && (
               <div className="save-btn-container">
-                <button onClick={handleSaveButton} className="save-btn">
-                  save
+                <button 
+                onClick={handleSaveButton} 
+                className="save-btn"
+                disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save"}                
                 </button>
               </div>
             )}
@@ -346,7 +354,7 @@ function ExpenseList({
         )}
       </div>
       <div className="expenseList-btn-container">
-        <button onClick={handleNavigation}>Full Expense List</button>
+        <button onClick={handleNavigation}>Expense Report</button>
       </div>
     </>
   );
