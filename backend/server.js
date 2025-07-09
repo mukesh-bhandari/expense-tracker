@@ -276,15 +276,16 @@ app.post("/api/expenses/save-states", async (req, res) => {
   const expenses = req.body;
 
   try {
-    for (const expense of expenses) {
+    const updatePromises = expenses.map((expense) => {
       const { id, buttonStates, checkboxStates, transaction_complete } =
         expense;
 
-      await pool.query(
+      return pool.query(
         "UPDATE expenses SET buttonstates = $1, checkboxstates = $2, transaction_complete = $3 WHERE id_ = $4",
         [buttonStates, checkboxStates, transaction_complete, id]
       );
-    }
+    });
+    await Promise.all(updatePromises);
 
     res.status(200).send({ message: "All states updated successfully" });
   } catch (error) {
