@@ -1,55 +1,317 @@
-html {
-  font-size: 16px;
-  line-height: 1.5;
+@import "tailwindcss";
+
+:root {
+    /* Core colors - Minimal & Clean */
+    --background: oklch(0.99 0.002 240);           /* Almost pure white with slight blue tint */
+    --foreground: oklch(0.15 0.004 240);           /* Deep charcoal for text */
+    
+    /* Surface colors */
+    --card: oklch(1 0 0);                          /* Pure white cards */
+    --card-foreground: oklch(0.15 0.004 240);      /* Same as foreground */
+    --surface: oklch(0.97 0.004 240);              /* Subtle background variation */
+    --surface-foreground: oklch(0.15 0.004 240);
+    
+    /* Primary - Professional indigo for actions */
+    --primary: oklch(0.47 0.13 260);               /* Your indigo-700 equivalent */
+    --primary-foreground: oklch(0.98 0.004 260);   /* Almost white */
+    --primary-hover: oklch(0.42 0.14 260);         /* Darker hover state */
+    --primary-light: oklch(0.95 0.025 260);        /* Light background for highlights */
+    
+    /* Secondary - Neutral grays */
+    --secondary: oklch(0.96 0.004 240);            /* Very light gray */
+    --secondary-foreground: oklch(0.35 0.006 240); /* Medium gray text */
+    --secondary-hover: oklch(0.93 0.006 240);      /* Slightly darker hover */
+    
+    /* Muted elements */
+    --muted: oklch(0.94 0.006 240);                /* Muted backgrounds */
+    --muted-foreground: oklch(0.55 0.004 240);     /* Muted text */
+    
+    /* Accent - Subtle highlights */
+    --accent: oklch(0.96 0.008 260);               /* Very light indigo */
+    --accent-foreground: oklch(0.47 0.13 260);     /* Primary color text */
+    
+    /* Financial semantic colors */
+    --income: oklch(0.64 0.15 145);                /* Green for positive amounts */
+    --income-foreground: oklch(0.96 0.03 145);
+    --income-light: oklch(0.96 0.03 145);
+    
+    --expense: oklch(0.58 0.18 25);                /* Red for negative amounts */
+    --expense-foreground: oklch(0.96 0.04 25);
+    --expense-light: oklch(0.96 0.04 25);
+    
+    --warning: oklch(0.72 0.15 70);                /* Amber for warnings */
+    --warning-foreground: oklch(0.15 0.004 240);
+    --warning-light: oklch(0.96 0.04 70);
+    
+    --info: oklch(0.60 0.12 220);                  /* Blue for information */
+    --info-foreground: oklch(0.96 0.02 220);
+    --info-light: oklch(0.96 0.02 220);
+    
+    /* UI Elements */
+    --border: oklch(0.89 0.006 240);               /* Subtle borders */
+    --border-light: oklch(0.94 0.004 240);         /* Even lighter borders */
+    --input: oklch(0.98 0.004 240);                /* Input backgrounds */
+    --ring: oklch(0.47 0.13 260);                  /* Focus rings */
+    
+    /* Typography */
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", "Fira Code", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    
+    /* Layout */
+    --radius: 0.5rem;                              /* Slightly rounded corners */
+    --radius-sm: 0.25rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    
+    /* Shadows - Minimal and clean */
+    --shadow-xs: 0px 1px 2px 0px oklch(0.15 0.004 240 / 0.05);
+    --shadow-sm: 0px 1px 3px 0px oklch(0.15 0.004 240 / 0.08), 0px 1px 2px -1px oklch(0.15 0.004 240 / 0.08);
+    --shadow-md: 0px 4px 6px -1px oklch(0.15 0.004 240 / 0.08), 0px 2px 4px -2px oklch(0.15 0.004 240 / 0.08);
+    --shadow-lg: 0px 10px 15px -3px oklch(0.15 0.004 240 / 0.08), 0px 4px 6px -4px oklch(0.15 0.004 240 / 0.08);
+    --shadow-xl: 0px 20px 25px -5px oklch(0.15 0.004 240 / 0.08), 0px 8px 10px -6px oklch(0.15 0.004 240 / 0.08);
+    
+    /* Spacing */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
 }
 
-body {
-  font-family: "Inter", sans-serif, "Arial", Helvetica, sans-serif;
-  color: #333;
-  background-color: #f5f5f5;
-  max-height: 100vh;
-  padding: 0;
-  margin: 0;
-}
-h1 {
-  color: #333;
-  font-size: 3rem;
-  margin: 50px;
-  /* padding: 50px; */
-  text-align: center;
+.dark {
+    /* Core colors - Dark mode */
+    --background: oklch(0.08 0.004 240);           /* Very dark with slight blue tint */
+    --foreground: oklch(0.95 0.004 240);           /* Almost white text */
+    
+    /* Surface colors */
+    --card: oklch(0.12 0.006 240);                 /* Dark cards */
+    --card-foreground: oklch(0.95 0.004 240);
+    --surface: oklch(0.10 0.006 240);              /* Slightly lighter than background */
+    --surface-foreground: oklch(0.95 0.004 240);
+    
+    /* Primary - Brighter in dark mode */
+    --primary: oklch(0.55 0.15 260);               /* Lighter indigo for better contrast */
+    --primary-foreground: oklch(0.08 0.004 240);   /* Dark text on primary */
+    --primary-hover: oklch(0.60 0.16 260);         /* Even lighter hover */
+    --primary-light: oklch(0.15 0.04 260);         /* Dark background for highlights */
+    
+    /* Secondary */
+    --secondary: oklch(0.16 0.006 240);            /* Dark gray */
+    --secondary-foreground: oklch(0.75 0.004 240); /* Light gray text */
+    --secondary-hover: oklch(0.20 0.006 240);      /* Lighter hover */
+    
+    /* Muted elements */
+    --muted: oklch(0.14 0.006 240);                /* Dark muted backgrounds */
+    --muted-foreground: oklch(0.60 0.004 240);     /* Lighter muted text */
+    
+    /* Accent */
+    --accent: oklch(0.15 0.008 260);               /* Dark indigo */
+    --accent-foreground: oklch(0.55 0.15 260);     /* Primary color text */
+    
+    /* Financial colors - Adjusted for dark mode */
+    --income: oklch(0.70 0.15 145);                /* Brighter green */
+    --income-foreground: oklch(0.08 0.004 240);
+    --income-light: oklch(0.15 0.04 145);
+    
+    --expense: oklch(0.65 0.18 25);                /* Brighter red */
+    --expense-foreground: oklch(0.08 0.004 240);
+    --expense-light: oklch(0.15 0.04 25);
+    
+    --warning: oklch(0.75 0.15 70);                /* Brighter amber */
+    --warning-foreground: oklch(0.08 0.004 240);
+    --warning-light: oklch(0.15 0.04 70);
+    
+    --info: oklch(0.67 0.12 220);                  /* Brighter blue */
+    --info-foreground: oklch(0.08 0.004 240);
+    --info-light: oklch(0.15 0.04 220);
+    
+    /* UI Elements */
+    --border: oklch(0.22 0.006 240);               /* Visible borders in dark */
+    --border-light: oklch(0.18 0.006 240);         /* Lighter borders */
+    --input: oklch(0.14 0.006 240);                /* Input backgrounds */
+    --ring: oklch(0.55 0.15 260);                  /* Brighter focus rings */
+    
+    /* Shadows - Darker and more prominent */
+    --shadow-xs: 0px 1px 2px 0px oklch(0.02 0 0 / 0.3);
+    --shadow-sm: 0px 1px 3px 0px oklch(0.02 0 0 / 0.4), 0px 1px 2px -1px oklch(0.02 0 0 / 0.4);
+    --shadow-md: 0px 4px 6px -1px oklch(0.02 0 0 / 0.4), 0px 2px 4px -2px oklch(0.02 0 0 / 0.4);
+    --shadow-lg: 0px 10px 15px -3px oklch(0.02 0 0 / 0.4), 0px 4px 6px -4px oklch(0.02 0 0 / 0.4);
+    --shadow-xl: 0px 20px 25px -5px oklch(0.02 0 0 / 0.4), 0px 8px 10px -6px oklch(0.02 0 0 / 0.4);
 }
 
-h2 {
-  color: #333;
-  font-size: 2em;
-  /* margin-left: 40px; */
-  /* padding-left: 50px */
-  /* text-align: center; */
+@theme inline {
+    /* Core theme colors */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-surface: var(--surface);
+    --color-surface-foreground: var(--surface-foreground);
+    
+    /* Primary colors */
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary-hover: var(--primary-hover);
+    --color-primary-light: var(--primary-light);
+    
+    /* Secondary colors */
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary-hover: var(--secondary-hover);
+    
+    /* Muted colors */
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    
+    /* Accent colors */
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    
+    /* Financial semantic colors */
+    --color-income: var(--income);
+    --color-income-foreground: var(--income-foreground);
+    --color-income-light: var(--income-light);
+    
+    --color-expense: var(--expense);
+    --color-expense-foreground: var(--expense-foreground);
+    --color-expense-light: var(--expense-light);
+    
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-warning-light: var(--warning-light);
+    
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+    --color-info-light: var(--info-light);
+    
+    /* UI Elements */
+    --color-border: var(--border);
+    --color-border-light: var(--border-light);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    
+    /* Typography */
+    --font-sans: var(--font-sans);
+    --font-mono: var(--font-mono);
+    
+    /* Border radius */
+    --radius-sm: var(--radius-sm);
+    --radius: var(--radius);
+    --radius-lg: var(--radius-lg);
+    --radius-xl: var(--radius-xl);
+    
+    /* Shadows */
+    --shadow-xs: var(--shadow-xs);
+    --shadow-sm: var(--shadow-sm);
+    --shadow: var(--shadow-sm);
+    --shadow-md: var(--shadow-md);
+    --shadow-lg: var(--shadow-lg);
+    --shadow-xl: var(--shadow-xl);
+    
+    /* Spacing scale */
+    --space-1: var(--space-1);
+    --space-2: var(--space-2);
+    --space-3: var(--space-3);
+    --space-4: var(--space-4);
+    --space-6: var(--space-6);
+    --space-8: var(--space-8);
 }
 
-.expense-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* Expense Platform Utility Classes */
+@layer utilities {
+    /* Amount styling utilities */
+    .amount-positive {
+        color: var(--color-income);
+    }
+    
+    .amount-negative {
+        color: var(--color-expense);
+    }
+    
+    .amount-zero {
+        color: var(--color-muted-foreground);
+    }
+    
+    /* Surface utilities */
+    .surface {
+        background-color: var(--color-surface);
+        color: var(--color-surface-foreground);
+    }
+    
+    /* Financial card styles */
+    .card-income {
+        background-color: var(--color-income-light);
+        border: 1px solid var(--color-income);
+        color: var(--color-income);
+    }
+    
+    .card-expense {
+        background-color: var(--color-expense-light);
+        border: 1px solid var(--color-expense);
+        color: var(--color-expense);
+    }
+    
+    /* Enhanced focus styles for financial inputs */
+    .input-financial {
+        background-color: var(--color-input);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        transition: all 0.2s ease;
+    }
+    
+    .input-financial:focus {
+        outline: none;
+        border-color: var(--color-ring);
+        box-shadow: 0 0 0 2px var(--color-ring);
+    }
 }
-.input-form {
-  height: 100px;
 
-  /* width: 70%; */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0.1s linear;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+/* Component-specific styles */
+@layer components {
+    .expense-form {
+        background-color: var(--color-card);
+        border: 1px solid var(--color-border-light);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .expense-item {
+        background-color: var(--color-card);
+        border: 1px solid var(--color-border-light);
+        border-radius: var(--radius);
+        transition: all 0.2s ease;
+    }
+    
+    .expense-item:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--color-border);
+    }
+    
+    .navbar-expense {
+        background-color: var(--color-primary);
+        color: var(--color-primary-foreground);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-primary-expense {
+        background-color: var(--color-primary);
+        color: var(--color-primary-foreground);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-xs);
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary-expense:hover {
+        background-color: var(--color-primary-hover);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-primary-expense:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--color-ring);
+    }
 }
-
-.input-form input {
-  width: 250px;
-}
-/* .input-form:hover{
-  transform: scale(1.02); 
-} */
 
 .calender {
   z-index: 1000;
@@ -134,326 +396,4 @@ h2 {
 
 .drop-down ul :hover {
   background-color: #e4e5e6;
-}
-
-.expense-section {
-  padding-bottom: 100px;
-}
-.expenses {
-  width: 900px;
-  /* border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
-  margin-left: 20px;
-  padding-right: 20px;
-  padding-bottom: 10px;
-}
-.expenses h2 {
-  margin-left: 40px;
-}
-
-.expenses li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #fff;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  font-family: "Inter", sans-serif;
-  font-size: 16px;
-}
-
-.expenses li span {
-  flex: 1;
-  text-align: left;
-  color: #333;
-}
-/* .expenses li:nth-child(odd) {
-      background: #f1f0f0;
-    }
-     */
-
-.save-btn-container {
-  display: flex;
-  /* margin-left: 40px; */
-}
-.transactions {
-  max-width: 350px;
-  margin: 20px auto;
-  padding: 15px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  font-family: "Inter", sans-serif;
-}
-
-.transactions h2 {
-  font-size: 22px;
-  text-align: center;
-  margin-bottom: 12px;
-  color: #333;
-  border-bottom: 2px solid #4caf50;
-  padding-bottom: 8px;
-}
-
-.transactions ul {
-  padding: 0;
-  list-style: none;
-}
-
-.transactions li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px;
-  margin: 4px 0;
-  background: #f8f8f8;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-}
-.transactions li:hover {
-  background: #f1f0f0;
-}
-
-.expense-list {
-  font-size: 20px;
-  display: flex;
-}
-
-.expense-list h1 {
-  margin: 40px 600px;
-  border-bottom: #333 solid;
-}
-.expense-list ol {
-  list-style-position: inside;
-  width: 800px;
-}
-.expense-list li {
-  margin: 5px;
-  background-color: #ffffff;
-  border-radius: 6px;
-  transition: background-color 0.05s linear;
-}
-
-.expense-list li:nth-child(odd) {
-  background: #f1f0f0;
-}
-
-/* .expense-list li:hover{
-    background-color: #eeebeb;
-  } */
-
-.expenseList-btn-container {
-  width: 100%;
-  padding: 5px;
-  position: fixed;
-  bottom: 0%;
-  left: 0%;
-  background-color: #ebebeb;
-  border-top: 2px solid #929191bd;
-}
-
-.expense-filter {
-  display: flex;
-  flex-direction: column;
-}
-
-.expense-filter select {
-  font-size: 16px;
-  width: fit-content;
-  margin-left: auto;
-  margin-right: 20px;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #9c9a9a;
-  background-color: #f8f9fa;
-  cursor: pointer;
-}
-
-.expense-summary {
-  height: 400px;
-  width: 400px;
-  margin: 50px;
-  padding: 20px;
-  /* background-color: #f8f9fa; */
-  /* border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); */
-}
-
-/* buttons */
-
-button {
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  padding: 0.3em 0.8em;
-  border-radius: 0.25em;
-  transition: 0.1s ease;
-  cursor: pointer;
-  font-size: 1rem;
-  margin: 5px;
-  opacity: 0.8;
-}
-button:hover {
-  opacity: 1;
-}
-.input-form button {
-  font-weight: bold;
-}
-.delete-btn {
-  padding: 8px;
-  border: none;
-  background-color: rgb(251, 29, 29);
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-}
-.delete-btn:hover {
-  background-color: red;
-}
-
-.save-btn {
-  margin-left: auto;
-}
-
-.save-btn-container button {
-  padding: 10px 20px;
-  font-weight: bold;
-  /* background-color: #3498db; */
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.transactactionDone {
-  padding: 5px 8px;
-  border: none;
-  background: #007bff;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  transition: 0.2s ease-in-out;
-  opacity: 0.8;
-}
-
-.transactactionDone:hover {
-  opacity: 1;
-}
-
-.checkbox {
-  transform: scale(1.3);
-  margin-left: 10px;
-  cursor: pointer;
-}
-
-/* inputs */
-
-input {
-  border: 1px solid #ccc;
-  border-radius: 0.25em;
-  font-size: 1.5em;
-  margin: 5px;
-}
-
-.select-paidBy {
-  background-color: #f8f9fa;
-  padding: 0.5em 1em;
-  margin: 5px;
-  border: 1px solid #ccc;
-  border-radius: 0.25em;
-  font-size: 1em;
-  cursor: pointer;
-}
-
-
-/* responsive */
-
-@media (max-width: 900px) {
-  .expense-form h1 {
-    font-size: 2.2em;
-    margin: 30px;
-    /* margin-bottom: 50px; */
-  }
-  .input-form {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    height: auto;
-  }
-  .expenses {
-    width: auto;
-    padding: 0%;
-    margin: 10px;
-  }
-  .expenses h2 {
-    font-size: 2em;
-    text-align: center;
-  }
-
-  .expenses ol {
-    padding: 0%;
-  }
-  .expenses li {
-    display: flex;
-    flex-direction: column;
-    padding: 5px;
-  }
-
-  .btn-toPay {
-    margin: 0 5px;
-    padding: 0 2px;
-    padding-left: 4px;
-    height: auto;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-  }
-  .checkbox {
-    margin: 6px;
-    margin-left: 7px;
-  }
-  .expenses-btns-container {
-    display: flex;
-    width: 100%;
-    /* font-size: 5px; */
-    /* justify-content: space-between; */
-    align-items: center;
-    justify-content: center;
-  }
-  .delete-btn {
-    margin: 5px;
-    padding: 5px;
-  }
-
-  /* .save-btn{ 
-  
-   background-color: #848383; 
-  padding: 0px; 
-} */
-  .transactions {
-    margin: 5px auto;
-    padding: 10px;
-  }
-
-  .expense-list {
-    width: auto;
-  }
-  .expense-list h1 {
-    margin: 20px;
-    width: auto;
-  }
-  .expense-list ol {
-    width: auto;
-    padding-left: 10px;
-  }
-  .expense-list li {
-    font-size: 12px;
-  }
 }

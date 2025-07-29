@@ -3,151 +3,105 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@fontsource/inter";
 import "../styles/index.css";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { useState, useEffect } from "react";
-import ExpenseForm from "../features/expense/ExpenseForm.jsx";
-import ExpenseList from "../features/expense/ExpenseList.jsx";
-import FullExpenseList from "../features/expense/DisplayExpense.jsx";
-import { backend_url } from "../utils/util.js";
+import { createBrowserRouter, RouterProvider, Outlet, redirect } from "react-router-dom";
 import LoginPage from "../features/auth/LoginPage.jsx";
-import { useNavigate } from "react-router-dom";
-import { redirect } from "react-router-dom";
+import { HomePage } from "./Home/Page.jsx";
+import Navbar from "../features/expense/Navbar.js";
+import History from "./History/Page.jsx";
 
-const expenseLoader = async () => {
-  let response = await fetch("/api/expenses/expenseList", {
-    method: "GET",
+// API utilities
+const apiRequest = async (url, options = {}) => {
+  const defaultOptions = {
     credentials: "include",
-  });
-
+    ...options,
+  };
+  
+  let response = await fetch(url, defaultOptions);
+  
+  // Handle 401 with retry
   if (response.status === 401) {
-    response = await fetch("/api/expenses/expenseList", {
-      method: "GET",
-      credentials: "include",
-    });
+    response = await fetch(url, defaultOptions);
     if (response.status === 401) {
       return redirect("/login");
     }
   }
-
-  // if (response.status === 401) {
-
-  //  const refreshResponse = await fetch("/api/refresh", {
-  //     method: "POST",
-  //     credentials: "include",
-  //   });
-
-  // if (refreshResponse.ok) {
-  //     response = await fetch("/api/expenses/expenseList", {
-  //       method: "GET",
-  //       credentials: "include",
-  //     });
-  //   }else {
-  //     return redirect("/login");
-  //     // throw new Error("Session expired. Please log in again.");
-  //   }
-  // }
-  if (!response.ok) {
-    return redirect("/login");
-    // throw new Error("Failed to fetch expenses");
+  
+  if (!response.ok && response.status !== 401) {
+    throw new Error(`API request failed: ${response.status}`);
   }
-
-  return response.json();
+  
+  return response;
 };
 
-const AppContent = () => {
-  const navigate = useNavigate();
-  const [expenses, setExpenses] = useState([]);
-  const fetchExpenses = async () => {
-    try {
-      let response = await fetch("/api/expenses", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
-      });
-
-      if (response.status === 401) {
-        response = await fetch("/api/expenses", {
-          method: "GET",
-          credentials: "include",
-        });
-        if (response.status === 401) {
-          navigate("/login");
-          return;
-        }
-      }
-
-      if (response.ok) {
-        const data = await response.json();
-        setExpenses(data);
-      }
-    } catch (error) {
-      console.error("Error fetching expenses:", error);
+// Loaders
+const expenseLoader = async () => {
+  try {
+    const response = await apiRequest("/api/expenses/expenseList", {
+      method: "GET",
+    });
+    
+    if (response instanceof Response && response.type === "opaqueredirect") {
+      return response;
     }
-  };
+    
+    return response.json();
+  } catch (error) {
+    console.error("Failed to load expenses:", error);
+    return redirect("/login");
+  }
+};
 
-  useEffect(() => {
-    fetchExpenses();
-    //console.log(newExpense)
-    // console.log(expenses)
-  }, []);
-
-  const addExpense = (data) => {
-    // console.log(data)
-    setExpenses((prev) => [...prev, data]);
-    // console.log(expenses);
-  };
-
-  // const handleDeleteBtn = async (id) => {
-  //   try {
-  //     const response = await fetch(`/api/expenses/${id}`, {
-  //       method: "DELETE",
-  //     });
-
-  //     if (response.ok) {
-  //       setExpenses((prevExpenses) => {
-  //         const updatedExpenses = prevExpenses.filter(
-  //           (expense) => expense.id_ !== id
-  //         );
-  //         return updatedExpenses;
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.log("error on deletion");
-  //   }
-  // };
-
+// Layout component with navbar
+const Layout = () => {
   return (
-    <>
-      <ExpenseForm onAddExpense={addExpense} />
-      <ExpenseList
-        persons={["mukesh", "aadarsh", "kushal", "niraj"]}
-        newExpense={expenses}
-        // onDelete={handleDeleteBtn}
-      />
-    </>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>
+      <Navbar />
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <Outlet />
+      </main>
+    </div>
   );
 };
 
+// Login layout (without navbar)
+const LoginLayout = () => {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-background)' }}>
+      <Outlet />
+    </div>
+  );
+};
+
+// Router configuration
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <AppContent></AppContent>,
-  },
-  {
-    path: "/expenses",
-    element: <FullExpenseList />,
-    loader: expenseLoader,
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      {
+        path: "expenses",
+        element: <History />,
+        loader: expenseLoader,
+      },
+    ],
   },
   {
     path: "/login",
-    element: <LoginPage></LoginPage>,
+    element: <LoginLayout />,
+    children: [
+      {
+        index: true,
+        element: <LoginPage />,
+      },
+    ],
   },
 ]);
 
+// App root
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <RouterProvider router={router} />
