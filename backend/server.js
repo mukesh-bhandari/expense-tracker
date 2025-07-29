@@ -316,6 +316,24 @@ const {id} = req.params;
   }
 })
 
+app.post("/api/logout", async (req, res) => {
+  try {
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+    });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+    });
+    res.json({ message: "Logout successful" });
+  } catch (error) {
+    console.error("Error during logout:", error);
+    res.status(500).json({ message: "Logout failed" });
+  }
+});
 
 // app.delete("/api/expenses/:id", async (req, res) => {
 //   const { id } = req.params;
