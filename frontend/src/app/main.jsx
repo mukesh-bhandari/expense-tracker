@@ -2,14 +2,14 @@ import React from "react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "@fontsource/inter";
-import "./index.css";
+import "../styles/index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useState, useEffect } from "react";
-import ExpenseForm from "./ExpenseForm.jsx";
-import ExpenseList from "./ExpenseList.jsx";
-import FullExpenseList from "./DisplayExpense.jsx";
-import { backend_url } from "./util.js";
-import LoginPage from "./LoginPage.jsx";
+import ExpenseForm from "../features/expense/ExpenseForm.jsx";
+import ExpenseList from "../features/expense/ExpenseList.jsx";
+import FullExpenseList from "../features/expense/DisplayExpense.jsx";
+import { backend_url } from "../utils/util.js";
+import LoginPage from "../features/auth/LoginPage.jsx";
 import { useNavigate } from "react-router-dom";
 import { redirect } from "react-router-dom";
 
@@ -19,7 +19,7 @@ const expenseLoader = async () => {
     credentials: "include",
   });
 
-   if (response.status === 401) {
+  if (response.status === 401) {
     response = await fetch("/api/expenses/expenseList", {
       method: "GET",
       credentials: "include",
@@ -68,28 +68,6 @@ const AppContent = () => {
           Expires: "0",
         },
       });
-      // if (response.status == 200) {
-      //   const data = await response.json();
-      //   setExpenses(data);
-      //   // console.log(data)
-      // }
-      // if (response.status === 401) {
-      //   const refreshResponse = await fetch("/api/refresh", {
-      //     method: "POST",
-      //     credentials: "include",
-      //   });
-
-      //   if (refreshResponse.ok) {
-      //     response = await fetch("/api/expenses", {
-      //       method: "GET",
-      //       credentials: "include",
-      //     });
-      //   }else {
-      //     navigate("/login")
-      //     return
-      //     // throw new Error("Session expired. Please log in again.");
-      //   }
-      // }
 
       if (response.status === 401) {
         response = await fetch("/api/expenses", {
@@ -101,15 +79,16 @@ const AppContent = () => {
           return;
         }
       }
-   
-        if (response.ok) {
-          const data = await response.json();
-          setExpenses(data);
-        }
+
+      if (response.ok) {
+        const data = await response.json();
+        setExpenses(data);
+      }
     } catch (error) {
       console.error("Error fetching expenses:", error);
     }
   };
+
   useEffect(() => {
     fetchExpenses();
     //console.log(newExpense)
