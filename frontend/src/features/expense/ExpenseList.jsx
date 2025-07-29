@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { backend_url } from "./util";
+import { backend_url } from "../../utils/util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
@@ -17,11 +17,7 @@ function ExpenseList({
     setExpenses(newExpense);
   }, [newExpense]);
 
-  // const key = `${expense.id_}-${person}`;
-  // setButtonStates((prev) => ({
-  //   ...prev,
-  //   [key]: !prev[key], // Toggle button state
-  // }));
+
   function handleButtonClick(expenseId, person) {
     setExpenses((prevExpenses) =>
       prevExpenses.map((expense) =>
@@ -109,66 +105,6 @@ function ExpenseList({
   const handleNavigation = () => {
     navigate("/expenses");
   };
-
-  // function calculateShare(expense) {
-  //   const greenPersons = persons.filter((person) => {
-  //     const key = `${expense.item}-${person}`;
-  //     return !buttonStates[key]; // Only consider green buttons
-  //   });
-  //   return greenPersons.length === 0
-  //     ? 0
-  //     : (expense.price / greenPersons.length).toFixed(2);
-  // }
-
-  // function calculateBalances() {
-  //   const balances = {};
-
-  //   persons.forEach((person) => (balances[person] = 0));
-  //   //  console.log(expenses)
-  //   expenses.forEach((expense) => {
-  //     const price = parseFloat(expense.price);
-  //     // console.log(typeof(price))
-  //     const greenPersons = persons.filter((person) => {
-  //       const key = `${expense.id_}-${person}`;
-  //       return !buttonStates[key];
-  //     });
-
-  //     if (greenPersons.length > 0) {
-  //       // console.log(typeof(price))
-  //       const sharePerPerson = price / greenPersons.length;
-
-  //       greenPersons.forEach((person) => {
-  //         const key = `${expense.id_}-${person}`;
-  //         //  console.log(balances[person])
-  //         balances[person] -= sharePerPerson;
-  //         // console.log(balances[person])
-  //         if (checkboxStates[key]) {
-  //           balances[person] += sharePerPerson;
-  //           balances[expense.paidBy] -= sharePerPerson;
-  //         }
-  //       });
-  //       balances[expense.paidBy] += price;
-  //     }
-  //   });
-  //   // console.log(balances)
-  //   // console.log(checkboxStates);
-  //   return balances;
-  // }
-
-  // const balances = calculateBalances();
-
-  // function handleTransactionComplete(person) {
-  //   expenses.forEach((expense) => {
-  //     const key = `${expense.id_}-${person}`;
-  //     setCheckboxStates((prev) => {
-  //       const updatedStates = { ...prev };
-  //       updatedStates[key] = !updatedStates[key];
-  //       return updatedStates;
-  //     });
-  //   });
-  //   // seperateBalances();
-  //   // console.log(checkboxStates);
-  // }
 
   function transactionPerExpense() {
     const transactions = [];
@@ -312,23 +248,7 @@ function ExpenseList({
           </div>
         )}
 
-        {/* <div className="expense-form">
-        <h2>Final Balances:</h2>
-        <ul>
-          {Object.entries(balances).map(([person, balance]) => (
-            <li key={person}>
-              {person}: {parseFloat(balance.toFixed(2))}{" "}
-              {balance >= 0 ? "to be reimbursed" : "to pay"}
-              <button
-                className="transactactionDone"
-                onClick={() => handleTransactionComplete(person)}
-              >
-                transaction complete
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div> */}
+
 
         {Object.entries(netTransactions).length > 0 && (
           <div className="transactions">
