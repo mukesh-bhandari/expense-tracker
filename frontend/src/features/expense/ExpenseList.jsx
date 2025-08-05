@@ -2,7 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { backend_url } from "../../utils/util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faCheck, faUser, faClock } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faCheck, faUser, faClock, faEdit } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
 function ExpenseList({
@@ -12,6 +12,9 @@ function ExpenseList({
   const [expenses, setExpenses] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [editAmounts, setEditAmounts] = useState({});
 
   useEffect(() => {
     setExpenses(newExpense);
@@ -19,17 +22,65 @@ function ExpenseList({
 
   function handleButtonClick(expenseId, person) {
     setExpenses((prevExpenses) =>
-      prevExpenses.map((expense) =>
-        expense.id_ === expenseId
-          ? {
-              ...expense,
-              buttonstates: {
-                ...expense.buttonstates,
-                [person]: !expense.buttonstates[person],
-              },
+      prevExpenses.map((expense) => {
+        if (expense.id_ === expenseId) {
+          const newButtonStates = {
+            ...expense.buttonstates,
+            [person]: !expense.buttonstates[person],
+          };
+          
+          // If we have custom amounts (manually edited)
+          if (expense.amounts) {
+            const isBeingSkipped = !expense.buttonstates[person]; // Will be skipped after toggle
+            
+            if (isBeingSkipped) {
+              // Person is being skipped - redistribute their amount equally to others
+              const newAmounts = { ...expense.amounts };
+              const personAmount = newAmounts[person] || 0;
+              newAmounts[person] = 0;
+              
+              // Find non-skipped persons (excluding the one being skipped)
+              const nonSkippedPersons = persons.filter(p => 
+                p !== person && !newButtonStates[p]
+              );
+              
+              if (nonSkippedPersons.length > 0 && personAmount > 0) {
+                const redistribution = personAmount / nonSkippedPersons.length;
+                nonSkippedPersons.forEach(p => {
+                  newAmounts[p] = (newAmounts[p] || 0) + redistribution;
+                  newAmounts[p] = Math.round(newAmounts[p] * 100) / 100; // Round to 2 decimals
+                });
+              }
+              
+              return {
+                ...expense,
+                buttonstates: newButtonStates,
+                amounts: newAmounts,
+              };
+            } else {
+              // Person is being unskipped - open edit popup
+              // First update the button state
+              const updatedExpense = {
+                ...expense,
+                buttonstates: newButtonStates,
+              };
+              
+              // Then trigger edit popup after state update
+              setTimeout(() => {
+                handleEditExpense(updatedExpense);
+              }, 0);
+              
+              return updatedExpense;
             }
-          : expense
-      )
+          }
+          
+          return {
+            ...expense,
+            buttonstates: newButtonStates,
+          };
+        }
+        return expense;
+      })
     );
   }
 
@@ -48,6 +99,136 @@ function ExpenseList({
       )
     );
   }
+
+  const handleEditExpense = (expense) => {
+    setEditingExpense(expense);
+    
+    // Calculate current equal division amounts for non-skipped persons
+    const price = parseFloat(expense.price);
+    const greenPersons = persons.filter(person => !expense.buttonstates[person]);
+    const sharePerPerson = greenPersons.length > 0 ? price / greenPersons.length : 0;
+    
+    // Pre-populate with existing amounts or equal division
+    const amounts = {};
+    persons.forEach(person => {
+      if (expense.amounts && expense.amounts[person] !== undefined) {
+        // Use existing custom amount
+        amounts[person] = expense.amounts[person];
+      } else if (!expense.buttonstates[person]) {
+        // Use equal division for non-skipped persons
+        amounts[person] = sharePerPerson;
+      } else {
+        // Skipped persons get 0
+        amounts[person] = 0;
+      }
+    });
+    
+    setEditAmounts(amounts);
+    setIsEditModalOpen(true);
+  };
+
+  const handleAmountChange = (person, value) => {
+    const numericValue = parseFloat(value) || 0;
+    const roundedValue = Math.round(numericValue * 100) / 100; // Round to 2 decimal places
+    
+    setEditAmounts(prev => ({
+      ...prev,
+      [person]: roundedValue
+    }));
+
+    // If amount is set to 0, also update the button state to show as skipped
+    if (roundedValue === 0 && editingExpense) {
+      setExpenses(prevExpenses => 
+        prevExpenses.map(expense => 
+          expense.id_ === editingExpense.id_
+            ? {
+                ...expense,
+                buttonstates: {
+                  ...expense.buttonstates,
+                  [person]: true // Mark as skipped
+                }
+              }
+            : expense
+        )
+      );
+    } else if (roundedValue > 0 && editingExpense) {
+      // If amount is greater than 0, ensure they're not marked as skipped
+      setExpenses(prevExpenses => 
+        prevExpenses.map(expense => 
+          expense.id_ === editingExpense.id_
+            ? {
+                ...expense,
+                buttonstates: {
+                  ...expense.buttonstates,
+                  [person]: false // Mark as not skipped
+                }
+              }
+            : expense
+        )
+      );
+    }
+  };
+
+  const handleSaveAmounts = () => {
+    const totalAllocated = Object.values(editAmounts).reduce((sum, amount) => sum + amount, 0);
+    const expensePrice = parseFloat(editingExpense.price);
+    
+    // Check if total allocated equals expense price (allowing for small rounding errors)
+    const difference = Math.abs(totalAllocated - expensePrice);
+    if (difference > 0.01) {
+      if (totalAllocated > expensePrice) {
+        alert(`Total allocated amount (${totalAllocated.toFixed(2)}) cannot exceed expense price (${expensePrice.toFixed(2)})`);
+      } else {
+        alert(`Total allocated amount (${totalAllocated.toFixed(2)}) must equal expense price (${expensePrice.toFixed(2)})`);
+      }
+      return;
+    }
+
+    // Update the expense with custom amounts
+    setExpenses(prevExpenses => 
+      prevExpenses.map(expense => 
+        expense.id_ === editingExpense.id_
+          ? { ...expense, amounts: { ...editAmounts } }
+          : expense
+      )
+    );
+
+    setIsEditModalOpen(false);
+    setEditingExpense(null);
+    setEditAmounts({});
+  };
+
+  const handleDivideEqually = () => {
+    if (!editingExpense) return;
+    
+    const price = parseFloat(editingExpense.price);
+    const nonSkippedPersons = persons.filter(person => !editingExpense.buttonstates[person]);
+    
+    if (nonSkippedPersons.length === 0) return;
+    
+    const sharePerPerson = price / nonSkippedPersons.length;
+    const newAmounts = {};
+    
+    persons.forEach(person => {
+      if (editingExpense.buttonstates[person]) {
+        // Skipped person gets 0
+        newAmounts[person] = 0;
+      } else {
+        // Non-skipped person gets equal share
+        newAmounts[person] = Math.round(sharePerPerson * 100) / 100;
+      }
+    });
+    
+    // Handle rounding errors by adjusting the last person
+    const totalAllocated = Object.values(newAmounts).reduce((sum, amount) => sum + amount, 0);
+    const difference = price - totalAllocated;
+    if (Math.abs(difference) > 0.01 && nonSkippedPersons.length > 0) {
+      const lastPerson = nonSkippedPersons[nonSkippedPersons.length - 1];
+      newAmounts[lastPerson] = Math.round((newAmounts[lastPerson] + difference) * 100) / 100;
+    }
+    
+    setEditAmounts(newAmounts);
+  };
 
   const handleSaveButton = async () => {
     if (isSaving) return;
@@ -78,6 +259,7 @@ function ExpenseList({
         id: expense.id_,
         buttonStates: buttonStateForExpense,
         checkboxStates: checkboxStateforExpense,
+        amounts: expense.amounts || {}, // Direct amounts object without ID wrapper
         transaction_complete: transactionCompletePerExpense,
       };
     });
@@ -108,13 +290,11 @@ function ExpenseList({
     expenses.forEach((expense) => {
       const price = parseFloat(expense.price);
 
-      const greenPersons = persons.filter((person) => {
-        return !expense.buttonstates[person];
-      });
-      if (greenPersons.length > 0) {
-        const sharePerPerson = price / greenPersons.length;
-        greenPersons.forEach((person) => {
-          if (person !== expense.paidBy) {
+      if (expense.amounts) {
+        // Use custom amounts
+        persons.forEach((person) => {
+          const amount = expense.amounts[person] || 0;
+          if (person !== expense.paidBy && amount > 0) {
             if (expense.checkboxstates[person]) {
               transactions.push({
                 from: person,
@@ -126,12 +306,39 @@ function ExpenseList({
               transactions.push({
                 from: person,
                 to: expense.paidBy,
-                amount: sharePerPerson,
+                amount: amount,
                 item: expense.item,
               });
             }
           }
         });
+      } else {
+        // Use equal division (original logic)
+        const greenPersons = persons.filter((person) => {
+          return !expense.buttonstates[person];
+        });
+        if (greenPersons.length > 0) {
+          const sharePerPerson = price / greenPersons.length;
+          greenPersons.forEach((person) => {
+            if (person !== expense.paidBy) {
+              if (expense.checkboxstates[person]) {
+                transactions.push({
+                  from: person,
+                  to: expense.paidBy,
+                  amount: 0,
+                  item: expense.item,
+                });
+              } else {
+                transactions.push({
+                  from: person,
+                  to: expense.paidBy,
+                  amount: sharePerPerson,
+                  item: expense.item,
+                });
+              }
+            }
+          });
+        }
       }
     });
     return transactions;
@@ -180,6 +387,20 @@ function ExpenseList({
       })
     );
   }
+
+  const getTotalAllocated = () => {
+    return Object.values(editAmounts).reduce((sum, amount) => sum + amount, 0);
+  };
+
+  const getRemainingAmount = () => {
+    if (!editingExpense) return 0;
+    return parseFloat(editingExpense.price) - getTotalAllocated();
+  };
+
+  const canSaveAmounts = () => {
+    const remaining = getRemainingAmount();
+    return Math.abs(remaining) <= 0.02; // Allow small rounding errors
+  };
 
   return (
     <div className="space-y-8">
@@ -246,6 +467,13 @@ function ExpenseList({
                       <span className="amount-negative font-semibold">
                         NPR {parseFloat(expense.price).toFixed(2)}
                       </span>
+                      <button
+                        onClick={() => handleEditExpense(expense)}
+                        className="p-1.5 hover:bg-secondary rounded-lg transition-colors duration-200 text-muted-foreground hover:text-foreground"
+                        title="Edit amounts"
+                      >
+                        <FontAwesomeIcon icon={faEdit} className="text-xs" />
+                      </button>
                     </div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <FontAwesomeIcon icon={faUser} className="text-xs" />
@@ -256,7 +484,8 @@ function ExpenseList({
                   {/* Person Buttons */}
                   <div className="flex flex-wrap gap-2 justify-start">
                     {persons.map((person) => {
-                      const isExcluded = expense.buttonstates[person];
+                      // Check both button state and custom amounts for skip status
+                      const isExcluded = expense.buttonstates[person] || (expense.amounts && expense.amounts[person] === 0);
                       const isPaid = expense.checkboxstates[person];
                       
                       return (
@@ -301,6 +530,119 @@ function ExpenseList({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Edit Amount Modal */}
+      {isEditModalOpen && editingExpense && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed left-0 top-0 w-lvw h-lvh bg-slate-300/50 z-40 duration-300"
+            onClick={() => setIsEditModalOpen(false)}
+          />
+          
+          {/* Modal */}
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-card border border-border rounded-lg z-50 shadow-lg">
+            <div className="flex flex-col max-h-[80vh]">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-border">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <FontAwesomeIcon icon={faEdit} className="text-primary" />
+                  Edit Amount Distribution
+                </h3>
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="p-2 hover:bg-secondary rounded-lg transition-colors duration-200 text-muted-foreground hover:text-foreground"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground">
+                    <p><span className="font-medium">Expense:</span> {editingExpense.item}</p>
+                    <p><span className="font-medium">Total Amount:</span> NPR {parseFloat(editingExpense.price).toFixed(2)}</p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {persons.map((person) => {
+                      const isSkipped = editingExpense.buttonstates[person];
+                      return (
+                        <div key={person} className="flex items-center justify-between">
+                          <label className="capitalize font-medium text-foreground">
+                            {person}
+                            {isSkipped && <span className="text-xs text-muted-foreground ml-2">(Skipped)</span>}
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">NPR</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              disabled={isSkipped}
+                              value={editAmounts[person] || 0}
+                              onChange={(e) => handleAmountChange(person, e.target.value)}
+                              className="w-20 px-2 py-1 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-muted disabled:text-muted-foreground"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="flex justify-center pt-2">
+                    <button
+                      onClick={handleDivideEqually}
+                      className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-secondary transition-colors duration-200 text-foreground"
+                    >
+                      Distribute Equally
+                    </button>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-border space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Total Allocated:</span>
+                      <span className="font-medium">NPR {getTotalAllocated().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Remaining:</span>
+                      <span className={`font-medium ${getRemainingAmount() < 0 ? 'text-red-500' : 'text-green-600'}`}>
+                        NPR {getRemainingAmount().toFixed(2)}
+                      </span>
+                    </div>
+                    {getRemainingAmount() < 0 && (
+                      <p className="text-xs text-red-500">⚠️ Total allocated exceeds expense amount</p>
+                    )}
+                    {getRemainingAmount() > 0.01 && (
+                      <p className="text-xs text-yellow-600">⚠️ Total allocated is less than expense amount</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-secondary transition-colors duration-200 text-foreground"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveAmounts}
+                  disabled={!canSaveAmounts()}
+                  className="btn-primary-expense px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Save Amounts
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Outstanding Balances Sheet */}

@@ -247,10 +247,12 @@ app.post("/api/expenses", async (req, res) => {
   const { id, item, price, paidBy, date } = newExpense;
   const buttonstates = {};
   const checkboxstates = {};
- console.log(date)
+  const amounts = {};
+ 
   persons.forEach((person) => {
     buttonstates[person] = false;
     checkboxstates[person] = person === paidBy;
+    amounts[person] = price/4;
   });
   
   let dateToInsert = date ;
@@ -258,12 +260,12 @@ app.post("/api/expenses", async (req, res) => {
     const currentDate = new Date();
      dateToInsert  = BS.ADToBS(currentDate); 
   }
-  console.log(dateToInsert) 
+  
 
   try {
     const result = await pool.query(
-      `INSERT INTO EXPENSES (id_, item, price, "paidBy", buttonstates, checkboxstates, bs_date) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [id, item, price, paidBy, buttonstates, checkboxstates, dateToInsert]
+      `INSERT INTO EXPENSES (id_, item, price, "paidBy", buttonstates, checkboxstates, bs_date, amounts) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [id, item, price, paidBy, buttonstates, checkboxstates, dateToInsert, amounts]
     );
     res.status(200).json(result.rows[0]);
   } catch (error) {
@@ -277,12 +279,12 @@ app.post("/api/expenses/save-states", async (req, res) => {
 
   try {
     const updatePromises = expenses.map((expense) => {
-      const { id, buttonStates, checkboxStates, transaction_complete } =
+      const { id, buttonStates, checkboxStates, amounts, transaction_complete } =
         expense;
 
       return pool.query(
-        "UPDATE expenses SET buttonstates = $1, checkboxstates = $2, transaction_complete = $3 WHERE id_ = $4",
-        [buttonStates, checkboxStates, transaction_complete, id]
+        "UPDATE expenses SET buttonstates = $1, checkboxstates = $2, transaction_complete = $3, amounts = $4 WHERE id_ = $5",
+        [buttonStates, checkboxStates, transaction_complete, amounts, id]
       );
     });
     await Promise.all(updatePromises);
