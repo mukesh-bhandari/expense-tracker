@@ -230,6 +230,45 @@ function ExpenseList({
     setEditAmounts(newAmounts);
   };
 
+  const handleCustomDistribution = () => {
+    if (!editingExpense) return;
+    
+    const price = parseFloat(editingExpense.price);
+    const nonSkippedPersons = persons.filter(person => !editingExpense.buttonstates[person]);
+    
+    if (nonSkippedPersons.length === 0) return;
+    
+    // Custom distribution: Aadarsh gets 2 portions, others get 1 portion each
+    // Total portions = number of non-skipped persons + 1 (extra portion for Aadarsh)
+    const totalPortions = nonSkippedPersons.length + (nonSkippedPersons.includes('aadarsh') ? 1 : 0);
+    const portionValue = price / totalPortions;
+    
+    const newAmounts = {};
+    
+    persons.forEach(person => {
+      if (editingExpense.buttonstates[person]) {
+        // Skipped person gets 0
+        newAmounts[person] = 0;
+      } else if (person === 'aadarsh') {
+        // Aadarsh gets 2 portions
+        newAmounts[person] = Math.round((portionValue * 2) * 100) / 100;
+      } else {
+        // Others get 1 portion each
+        newAmounts[person] = Math.round(portionValue * 100) / 100;
+      }
+    });
+    
+    // Handle rounding errors by adjusting the last non-aadarsh person
+    const totalAllocated = Object.values(newAmounts).reduce((sum, amount) => sum + amount, 0);
+    const difference = price - totalAllocated;
+    if (Math.abs(difference) > 0.01 && nonSkippedPersons.length > 0) {
+      const adjustPerson = nonSkippedPersons.find(p => p !== 'aadarsh') || nonSkippedPersons[nonSkippedPersons.length - 1];
+      newAmounts[adjustPerson] = Math.round((newAmounts[adjustPerson] + difference) * 100) / 100;
+    }
+    
+    setEditAmounts(newAmounts);
+  };
+
   const handleSaveButton = async () => {
     if (isSaving) return;
     setIsSaving(true);
@@ -594,13 +633,20 @@ function ExpenseList({
                     })}
                   </div>
                   
-                  <div className="flex justify-center pt-2">
+                  <div className="flex flex-col gap-2 pt-2">
                     <button
                       onClick={handleDivideEqually}
                       className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-secondary transition-colors duration-200 text-foreground"
                     >
                       Distribute Equally
                     </button>
+                    <button
+                      onClick={handleCustomDistribution}
+                      className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-secondary transition-colors duration-200 text-foreground bg-primary/10 border-primary/20"
+                    >
+                      Custom Distribution
+                    </button>
+                  
                   </div>
                   
                   <div className="pt-4 border-t border-border space-y-2">
