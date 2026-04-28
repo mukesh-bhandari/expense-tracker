@@ -31,13 +31,22 @@ export default function HistoryAndAnalytics() {
 
   // Group expenses by person based on amount owed
   const expensesByPerson = expenses.reduce((acc, expense) => {
-    if (expense.amounts && typeof expense.amounts === 'object') {
+    if (expense.amounts && typeof expense.amounts === "object") {
       Object.entries(expense.amounts).forEach(([person, amount]) => {
+        const parsedAmount = Number.parseFloat(amount);
+
+        if (!Number.isFinite(parsedAmount)) {
+          return;
+        }
+
         if (!acc[person]) {
           acc[person] = { count: 0, total: 0 };
         }
-        acc[person].count += 1;
-        acc[person].total += parseFloat(amount);
+
+        if (parsedAmount > 0) {
+          acc[person].count += 1;
+          acc[person].total += parsedAmount;
+        }
       });
     }
     return acc;
