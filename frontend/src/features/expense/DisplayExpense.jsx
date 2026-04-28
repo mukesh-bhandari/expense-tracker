@@ -29,14 +29,26 @@ export default function HistoryAndAnalytics() {
     .reduce((sum, expense) => sum + parseFloat(expense.price), 0)
     .toFixed(2);
 
-  // Group expenses by person for additional insights
+  // Group expenses by person based on amount owed
   const expensesByPerson = expenses.reduce((acc, expense) => {
-    const person = expense.paidBy;
-    if (!acc[person]) {
-      acc[person] = { count: 0, total: 0 };
+    if (expense.amounts && typeof expense.amounts === "object") {
+      Object.entries(expense.amounts).forEach(([person, amount]) => {
+        const parsedAmount = Number.parseFloat(amount);
+
+        if (!Number.isFinite(parsedAmount)) {
+          return;
+        }
+
+        if (!acc[person]) {
+          acc[person] = { count: 0, total: 0 };
+        }
+
+        if (parsedAmount > 0) {
+          acc[person].count += 1;
+          acc[person].total += parsedAmount;
+        }
+      });
     }
-    acc[person].count += 1;
-    acc[person].total += parseFloat(expense.price);
     return acc;
   }, {});
 
