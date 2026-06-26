@@ -43,14 +43,10 @@ export const HomePage = () => {
 
   useEffect(() => {
     fetchExpenses();
-    //console.log(newExpense)
-    // console.log(expenses)
   }, []);
 
-  const addExpense = (data) => {
-    // console.log(data)
-    setExpenses((prev) => [...prev, data]);
-    // console.log(expenses);
+  const addExpense = async (data) => {
+      await fetchExpenses();  // reloading all due to stale update issue 
   };
 
   // const handleDeleteBtn = async (id) => {
